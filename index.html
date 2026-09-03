@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- ওয়েবসাইটের টাইটেল আপডেট করা হয়েছে -->
     <title>Rashik's Work Daily Tracking</title>
-    <!-- Favicon যুক্ত করা হয়েছে -->
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -143,7 +141,6 @@
     <div id="authScreen">
         <!-- LOGIN VIEW -->
         <div class="auth-card active" id="loginCard">
-            <!-- হেডিং আপডেট করা হয়েছে -->
             <h2><i class="fa-solid fa-layer-group" style="color: var(--accent-primary);"></i> Rashik's Work Daily Tracking</h2>
             <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 13px;">Secure Cloud Terminal Login</p>
             
@@ -175,7 +172,6 @@
     <div id="appContainer">
         <div class="sidebar">
             <div class="brand">
-                <!-- সাইডবার লোগো টেক্সট আপডেট করা হয়েছে -->
                 <i class="fa-solid fa-layer-group logo-icon"></i> Rashik's Tracking
             </div>
             
@@ -378,6 +374,9 @@
         let audioEnabled = false;
         let trendChartInst = null; 
         let reasonChartInst = null;
+        
+        // 🟢 FIX 1: গ্লোবাল ভেরিয়েবল যা বারবার চেক করা ঠেকাবে
+        let isCheckingState = false; 
 
         // Toggle Login & Signup view
         function toggleAuth(view) {
@@ -518,6 +517,18 @@
             analyzeWeakness(); 
             setInterval(tick, 1000); 
             tick();
+            
+            // 🟢 FIX 2: Auto Sync (ল্যাপটপ ও ট্যাবকে সব সময় আপডেটেড রাখবে)
+            setInterval(async () => {
+                if (currentUser) {
+                    await loadCloudData();
+                    if(document.getElementById('dashboard').classList.contains('active')) {
+                        renderMatrix(); 
+                        updateStats(); 
+                        analyzeWeakness();
+                    }
+                }
+            }, 10000); // প্রতি ১০ সেকেন্ডে সিঙ্ক হবে
         }
 
         function toggleAudio() {
@@ -896,23 +907,50 @@
                     document.getElementById('countdownTimer').innerText = `0${9-m}:${(59-s).toString().padStart(2, '0')}`; 
                     document.getElementById('countdownTimer').style.color = "var(--accent-primary)";
                 } else if (session.attendance === null && !session.missed) { 
-                    session.attendance = false; 
-                    session.missed = true; 
-                    saveCloudData(); 
                     panel.classList.remove('active');
+                    
+                    // 🟢 FIX 3: ফেইল করার আগে ক্লাউড থেকে ফ্রেশ ডেটা চেক করবে
+                    if(!isCheckingState) {
+                        isCheckingState = true;
+                        loadCloudData().then(() => {
+                            let freshSession = appData[today][h];
+                            if (freshSession.attendance === null && !freshSession.missed) {
+                                freshSession.attendance = false;
+                                freshSession.missed = true;
+                                saveCloudData();
+                            }
+                            setTimeout(() => isCheckingState = false, 3000);
+                        });
+                    }
                 } else { 
                     panel.classList.remove('active'); 
                 }
             } else {
                 panel.classList.remove('active');
-                if (session.attendance === true && session.setup === null && !session.missed) { 
-                    session.setup = "[SYSTEM] Auto-closed."; 
-                    saveCloudData(); 
-                }
-                if (session.attendance === null && !session.missed) { 
-                    session.attendance = false; 
-                    session.missed = true; 
-                    saveCloudData(); 
+                let needsAutoClose = (session.attendance === true && session.setup === null && !session.missed);
+                let needsAutoFail = (session.attendance === null && !session.missed);
+
+                if (needsAutoClose || needsAutoFail) {
+                    // 🟢 FIX 4: ফেইল বা অটো-ক্লোজ করার আগেও সেম ক্লাউড চেক করবে
+                    if(!isCheckingState) {
+                        isCheckingState = true;
+                        loadCloudData().then(() => {
+                            let freshSession = appData[today][h];
+                            let changed = false;
+                            
+                            if (freshSession.attendance === true && freshSession.setup === null && !freshSession.missed) {
+                                freshSession.setup = "[SYSTEM] Auto-closed.";
+                                changed = true;
+                            }
+                            if (freshSession.attendance === null && !freshSession.missed) {
+                                freshSession.attendance = false;
+                                freshSession.missed = true;
+                                changed = true;
+                            }
+                            if(changed) saveCloudData();
+                            setTimeout(() => isCheckingState = false, 3000);
+                        });
+                    }
                 }
             }
         }
