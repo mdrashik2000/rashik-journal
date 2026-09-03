@@ -3,19 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rashik's Work Daily Tracking</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>">
+    <title>Rashik's Evaluation Terminal</title>
+    
+    <!-- প্রফেশনাল SVG Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='22 12 18 12 15 21 9 3 6 12 2 12'></polyline></svg>">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Supabase CDN & Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
+        /* Modern UI Variables */
         :root {
             --bg-base: #09090b; --bg-surface: #18181b; --bg-surface-hover: #27272a;
             --border-color: #27272a; --border-light: #3f3f46;
@@ -24,13 +26,15 @@
             --success-text: #34d399; --success-bg: rgba(16, 185, 129, 0.1);
             --danger-text: #f87171; --danger-bg: rgba(239, 68, 68, 0.1);
             --warning-text: #fbbf24; --warning-bg: rgba(245, 158, 11, 0.1);
-            --radius-md: 8px; --radius-lg: 12px;
+            --radius-md: 10px; --radius-lg: 16px;
+            --shadow-soft: 0 4px 20px rgba(0,0,0,0.3);
         }
 
         [data-theme="light"] {
-            --bg-base: #f4f4f5; --bg-surface: #ffffff; --bg-surface-hover: #f1f5f9;
+            --bg-base: #f8fafc; --bg-surface: #ffffff; --bg-surface-hover: #f1f5f9;
             --border-color: #e2e8f0; --border-light: #cbd5e1;
             --text-main: #0f172a; --text-muted: #64748b;
+            --shadow-soft: 0 4px 20px rgba(0,0,0,0.05);
         }
 
         [data-theme="dim"] {
@@ -42,95 +46,129 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
         body { background-color: var(--bg-base); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; font-size: 14px; -webkit-font-smoothing: antialiased; }
         
-        /* Auth Screen */
-        #authScreen { position: fixed; inset: 0; background: var(--bg-base); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .auth-card { background: var(--bg-surface); padding: 40px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); width: 100%; max-width: 440px; box-shadow: 0 4px 30px rgba(0,0,0,0.5); text-align: center; display: none; }
-        .auth-card.active { display: block; animation: fadeIn 0.3s ease; }
-        .auth-card h2 { margin-bottom: 24px; font-size: 22px; color: var(--text-main); }
-        .auth-input { width: 100%; padding: 12px 16px; margin-bottom: 16px; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--radius-md); outline: none; }
-        .auth-input:focus { border-color: var(--accent-primary); }
-        
-        .auth-link { color: var(--accent-primary); cursor: pointer; font-weight: 600; }
-        .auth-link:hover { text-decoration: underline; }
-
-        /* App Layout */
-        #appContainer { display: none; width: 100%; height: 100%; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
 
-        .sidebar { width: 260px; background-color: var(--bg-surface); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 10; }
-        .brand { padding: 24px 20px; font-size: 15px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 12px; }
-        .brand .logo-icon { background: linear-gradient(135deg, var(--accent-primary), #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 20px; }
+        /* Auth Screen */
+        #authScreen { position: fixed; inset: 0; background: var(--bg-base); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .auth-card { background: var(--bg-surface); padding: 40px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); width: 100%; max-width: 440px; box-shadow: var(--shadow-soft); text-align: center; display: none; }
+        .auth-card.active { display: block; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .auth-card h2 { margin-bottom: 24px; font-size: 22px; color: var(--text-main); }
+        .auth-input { width: 100%; padding: 14px 16px; margin-bottom: 16px; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--radius-md); outline: none; transition: all 0.2s; }
+        .auth-input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .auth-link { color: var(--accent-primary); cursor: pointer; font-weight: 600; }
+        .auth-link:hover { text-decoration: underline; }
+
+        /* Layout */
+        #appContainer { display: none; width: 100%; height: 100%; flex-direction: column; }
         
-        .nav-menu { padding: 0 12px; flex-grow: 1; }
-        .nav-item { padding: 10px 16px; margin-bottom: 6px; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; gap: 12px; border-radius: var(--radius-md); font-weight: 500; transition: all 0.2s; }
+        /* Marquee Header */
+        .marquee-bar { width: 100%; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); overflow: hidden; white-space: nowrap; padding: 10px 0; font-size: 13px; font-weight: 600; color: var(--text-muted); z-index: 20; display: flex; align-items: center; letter-spacing: 0.5px;}
+        .marquee-content { display: inline-block; animation: scroll-marquee 40s linear infinite; }
+        .marquee-content span { margin: 0 25px; color: var(--accent-primary); }
+        @keyframes scroll-marquee { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } }
+
+        .main-wrapper { display: flex; flex-grow: 1; overflow: hidden; }
+
+        /* Sidebar */
+        .sidebar { width: 280px; background-color: var(--bg-surface); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.1); }
+        .brand { padding: 28px 24px; font-size: 16px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; }
+        .brand .logo-icon { background: linear-gradient(135deg, var(--accent-primary), #60a5fa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-size: 22px; }
+        
+        .nav-menu { padding: 0 16px; flex-grow: 1; }
+        .nav-item { padding: 12px 18px; margin-bottom: 8px; cursor: pointer; color: var(--text-muted); display: flex; align-items: center; gap: 14px; border-radius: var(--radius-md); font-weight: 500; transition: all 0.2s ease; }
         .nav-item i { font-size: 16px; width: 20px; text-align: center; }
-        .nav-item:hover, .nav-item.active { background-color: var(--bg-surface-hover); color: var(--text-main); }
-        .nav-item.active { border: 1px solid var(--border-light); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .nav-item:hover { background-color: var(--bg-surface-hover); color: var(--text-main); }
+        .nav-item.active { background-color: var(--accent-glow); color: var(--accent-primary); border: 1px solid rgba(59, 130, 246, 0.2); }
         
-        .sys-controls { padding: 20px; border-top: 1px solid var(--border-color); }
-        .theme-selector { display: flex; gap: 5px; margin-bottom: 15px; background: var(--bg-base); padding: 5px; border-radius: 6px; border: 1px solid var(--border-color); }
-        .theme-btn { flex: 1; padding: 6px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: 4px; font-size: 12px; font-weight: 600; }
-        .theme-btn.active { background: var(--bg-surface); color: var(--text-main); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .sys-controls { padding: 24px; border-top: 1px solid var(--border-color); }
+        .theme-selector { display: flex; gap: 6px; margin-bottom: 16px; background: var(--bg-base); padding: 6px; border-radius: 8px; border: 1px solid var(--border-color); }
+        .theme-btn { flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-muted); cursor: pointer; border-radius: 6px; font-size: 12px; font-weight: 600; transition: all 0.2s;}
+        .theme-btn.active { background: var(--bg-surface); color: var(--text-main); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         
-        .btn { padding: 10px 16px; width: 100%; border: none; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
-        .btn-primary { background: var(--accent-primary); color: white; }
-        .btn-primary:hover { background: var(--accent-hover); }
+        .btn { padding: 12px 20px; width: 100%; border: none; border-radius: var(--radius-md); font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 8px; }
+        .btn-primary { background: linear-gradient(135deg, var(--accent-primary), #2563eb); color: white; box-shadow: 0 4px 12px var(--accent-glow); }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 15px var(--accent-glow); filter: brightness(1.1); }
         .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-main); }
         .btn-outline:hover { background: var(--bg-surface-hover); }
+        .btn-danger { background: var(--danger-bg); color: var(--danger-text); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.2); }
 
-        .workspace { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; background: var(--bg-base); }
-        .top-header { padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 5; background: var(--bg-surface); border-bottom: 1px solid var(--border-color); }
-        .greeting h1 { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-        .greeting p { color: var(--text-muted); font-size: 13px; display: flex; align-items: center; gap: 8px; }
+        .workspace { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; background: var(--bg-base); position: relative; }
+        .top-header { padding: 24px 48px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 5; background: rgba(24, 24, 27, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); }
+        [data-theme="light"] .top-header { background: rgba(255, 255, 255, 0.8); }
+        [data-theme="dim"] .top-header { background: rgba(30, 41, 59, 0.8); }
         
-        .header-actions { display: flex; gap: 15px; align-items: center; }
-        .audio-btn { background: var(--warning-bg); color: var(--warning-text); border: 1px solid rgba(245, 158, 11, 0.3); padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .greeting h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px;}
+        .greeting p { color: var(--text-muted); font-size: 13px; display: flex; align-items: center; gap: 8px; font-weight: 500;}
+        
+        .header-actions { display: flex; gap: 16px; align-items: center; }
+        .audio-btn { background: var(--warning-bg); color: var(--warning-text); border: 1px solid rgba(245, 158, 11, 0.3); padding: 10px 20px; border-radius: 30px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;}
         .audio-btn.active { background: var(--success-bg); color: var(--success-text); border-color: rgba(16, 185, 129, 0.3); }
-        .clock-display { font-family: 'JetBrains Mono', monospace; font-size: 20px; font-weight: 700; color: var(--text-main); background: var(--bg-base); padding: 8px 16px; border-radius: var(--radius-md); border: 1px solid var(--border-color); }
+        .clock-display { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: var(--text-main); background: var(--bg-base); padding: 10px 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
 
-        .content { padding: 40px; max-width: 1600px; margin: 0 auto; width: 100%; }
+        .content { padding: 48px; max-width: 1600px; margin: 0 auto; width: 100%; }
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
 
-        .action-panel { background: var(--bg-surface); border: 1px solid var(--accent-primary); border-radius: var(--radius-lg); padding: 30px; margin-bottom: 32px; display: none; box-shadow: 0 0 30px var(--accent-glow); position: relative; }
-        .action-panel::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, var(--accent-primary), #60a5fa); }
-        .action-panel.active { display: block; }
+        .action-panel { background: var(--bg-surface); border: 1px solid var(--accent-primary); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 40px; display: none; box-shadow: 0 8px 32px var(--accent-glow); position: relative; overflow: hidden; }
+        .action-panel::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, var(--accent-primary), #60a5fa, #34d399); }
+        .action-panel.active { display: block; animation: slideDown 0.4s ease; }
         .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .panel-title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .panel-title { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
         
-        .math-challenge { font-family: 'JetBrains Mono', monospace; font-size: 32px; font-weight: 700; background: var(--bg-base); padding: 24px; text-align: center; border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: 24px; letter-spacing: 2px; }
-        .input-group { display: flex; gap: 12px; margin-bottom: 12px; }
-        .input-control { flex-grow: 1; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 12px 16px; border-radius: var(--radius-md); font-size: 14px; outline: none; }
-        .input-control:focus { border-color: var(--accent-primary); }
-        select.input-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a1a1aa'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; padding-right: 36px; }
+        .math-challenge { font-family: 'JetBrains Mono', monospace; font-size: 36px; font-weight: 700; background: var(--bg-base); padding: 24px; text-align: center; border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: 24px; letter-spacing: 4px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.2); }
+        .input-group { display: flex; gap: 16px; margin-bottom: 16px; }
+        .input-control { flex-grow: 1; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); padding: 14px 18px; border-radius: var(--radius-md); font-size: 14px; outline: none; transition: border 0.2s;}
+        .input-control:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 2px var(--accent-glow); }
+        select.input-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a1a1aa'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; background-size: 16px; padding-right: 40px; cursor: pointer; }
 
-        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 32px; }
-        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 24px; }
-        .stat-card { background: var(--bg-surface); border: 1px solid var(--border-color); padding: 24px; border-radius: var(--radius-lg); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .stat-header { display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 13px; font-weight: 500; margin-bottom: 12px;}
-        .stat-value { font-size: 28px; font-weight: 700; font-family: 'JetBrains Mono', monospace; }
+        .dashboard-grid { display: grid; grid-template-columns: 5fr 2fr; gap: 32px; margin-bottom: 40px; }
+        .stats-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px; margin-bottom: 24px; }
+        .stat-card { background: var(--bg-surface); border: 1px solid var(--border-color); padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-soft); transition: transform 0.2s; }
+        .stat-card:hover { transform: translateY(-2px); }
+        .stat-header { display: flex; justify-content: space-between; align-items: center; color: var(--text-muted); font-size: 13px; font-weight: 600; margin-bottom: 16px; text-transform: uppercase; letter-spacing: 0.5px;}
+        .stat-value { font-size: 32px; font-weight: 700; font-family: 'JetBrains Mono', monospace; letter-spacing: -1px; }
 
-        .reality-card { background: var(--bg-surface); border: 1px solid var(--accent-primary); padding: 24px; border-radius: var(--radius-lg); position: relative; overflow: hidden; box-shadow: 0 4px 20px var(--accent-glow); }
-        .reality-title { font-size: 14px; font-weight: 600; color: var(--accent-primary); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 1px; }
-        .weakness-text { font-size: 15px; line-height: 1.6; color: var(--text-main); font-weight: 400; }
-        .weakness-tag { display: inline-block; background: var(--danger-bg); color: var(--danger-text); padding: 4px 10px; border-radius: 4px; font-size: 12px; margin-top: 15px; border: 1px solid rgba(239,68,68,0.3); font-weight: 600; }
+        .reality-card { background: var(--bg-surface); border: 1px solid var(--accent-primary); padding: 32px; border-radius: var(--radius-lg); position: relative; overflow: hidden; box-shadow: var(--shadow-soft); display: flex; flex-direction: column; justify-content: center;}
+        .reality-title { font-size: 14px; font-weight: 700; color: var(--accent-primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .weakness-text { font-size: 16px; line-height: 1.7; color: var(--text-main); font-weight: 500; }
+        .weakness-tag { display: inline-block; background: var(--danger-bg); color: var(--danger-text); padding: 6px 12px; border-radius: 6px; font-size: 12px; margin-top: 20px; border: 1px solid rgba(239,68,68,0.3); font-weight: 700; text-transform: uppercase;}
 
-        .card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .card-header { padding: 20px 24px; border-bottom: 1px solid var(--border-color); font-weight: 600; display: flex; justify-content: space-between; background: var(--bg-base); }
+        .card { background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 40px; box-shadow: var(--shadow-soft); }
+        .card-header { padding: 24px 32px; border-bottom: 1px solid var(--border-color); font-weight: 600; display: flex; justify-content: space-between; align-items: center; background: rgba(9, 9, 11, 0.2); font-size: 16px; }
         table { width: 100%; border-collapse: collapse; }
-        th, td { text-align: left; padding: 16px 24px; border-bottom: 1px solid var(--border-color); font-size: 13px; }
-        th { color: var(--text-muted); font-size: 12px; text-transform: uppercase; background: rgba(9,9,11,0.05); }
+        th, td { text-align: left; padding: 18px 32px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+        th { color: var(--text-muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; background: rgba(9,9,11,0.05); }
+        tr { transition: background 0.2s; }
+        tr:hover { background: rgba(255,255,255,0.02); }
         tr.active-hour td { background: var(--accent-glow); border-left: 3px solid var(--accent-primary); }
 
-        .badge-reason { background: var(--warning-bg); color: var(--warning-text); padding: 4px 8px; border-radius: 4px; font-size: 11px; border: 1px solid rgba(245, 158, 11, 0.2); margin-right: 8px; display: inline-block; margin-bottom: 4px;}
-        .badge-pair { background: var(--accent-primary); color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; margin-right: 8px; display: inline-block; margin-bottom: 4px;}
-        .exec-time { font-size: 11px; color: var(--text-muted); display: block; margin-top: 4px; font-family: monospace; }
+        .badge-reason { background: var(--warning-bg); color: var(--warning-text); padding: 6px 10px; border-radius: 6px; font-size: 11px; border: 1px solid rgba(245, 158, 11, 0.2); margin-right: 8px; font-weight: 600; display: inline-block; margin-bottom: 6px;}
+        .badge-pair { background: var(--accent-primary); color: white; padding: 6px 10px; border-radius: 6px; font-size: 11px; margin-right: 8px; font-weight: 600; display: inline-block; margin-bottom: 6px; box-shadow: 0 2px 5px rgba(59, 130, 246, 0.4);}
+        .exec-time { font-size: 12px; color: var(--text-muted); display: block; margin-top: 6px; font-family: 'JetBrains Mono', monospace; }
 
-        .chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; margin-bottom: 32px; }
-        .chart-container { background: var(--bg-surface); padding: 24px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); height: 380px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .chart-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 32px; margin-bottom: 40px; }
+        .chart-container { background: var(--bg-surface); padding: 32px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); height: 420px; box-shadow: var(--shadow-soft); }
 
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        /* --- Daily Notes UI --- */
+        .notes-layout { display: flex; gap: 32px; height: 65vh; min-height: 500px; }
+        .notes-sidebar { width: 320px; display: flex; flex-direction: column; gap: 16px; border-right: 1px solid var(--border-color); padding-right: 32px; }
+        .notes-list { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 8px; }
+        .note-item { padding: 16px; border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; background: var(--bg-base); transition: all 0.2s; }
+        .note-item:hover { border-color: var(--border-light); background: var(--bg-surface-hover); }
+        .note-item.active { border-color: var(--accent-primary); background: var(--accent-glow); }
+        .note-item-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .note-item-time { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+        
+        .note-editor { flex-grow: 1; display: flex; flex-direction: column; gap: 16px; background: var(--bg-surface); padding: 32px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-soft); }
+        .note-title-input { font-size: 24px; font-weight: 700; background: transparent; border: none; outline: none; color: var(--text-main); border-bottom: 2px solid transparent; padding-bottom: 8px; transition: border 0.2s;}
+        .note-title-input:focus { border-bottom-color: var(--accent-primary); }
+        .note-body-input { flex-grow: 1; background: transparent; border: none; outline: none; color: var(--text-main); font-size: 15px; line-height: 1.7; resize: none; }
+        .empty-note-state { flex-grow: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); gap: 16px; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body data-theme="dark">
@@ -139,242 +177,281 @@
 
     <!-- AUTH SCREEN -->
     <div id="authScreen">
-        <!-- LOGIN VIEW -->
         <div class="auth-card active" id="loginCard">
-            <h2><i class="fa-solid fa-layer-group" style="color: var(--accent-primary);"></i> Rashik's Work Daily Tracking</h2>
-            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 13px;">Secure Cloud Terminal Login</p>
+            <h2><i class="fa-solid fa-chart-line" style="color: var(--accent-primary);"></i> Rashik's Terminal</h2>
+            <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 14px;">Secure Cloud Evaluation Login</p>
             
             <input type="email" id="loginEmail" class="auth-input" placeholder="Email Address">
             <input type="password" id="loginPassword" class="auth-input" placeholder="Password">
-            <button class="btn btn-primary" onclick="handleLogin()" style="margin-bottom: 12px; padding: 12px;">Sign In</button>
+            <button class="btn btn-primary" onclick="handleLogin()" style="margin-bottom: 16px; padding: 14px;">Sign In to Terminal</button>
             
             <p style="font-size: 13px; color: var(--text-muted);">Don't have an account? <span class="auth-link" onclick="toggleAuth('signup')">Create one</span></p>
-            
-            <p id="loginMessage" style="color: var(--danger-text); margin-top: 15px; font-size: 12px; display: none;"></p>
+            <p id="loginMessage" style="color: var(--danger-text); margin-top: 16px; font-size: 13px; font-weight: 500; display: none;"></p>
         </div>
 
-        <!-- SIGNUP VIEW -->
         <div class="auth-card" id="signupCard">
-            <h2><i class="fa-solid fa-user-plus" style="color: var(--accent-primary);"></i> Create Account</h2>
-            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 13px;">Join the Analytics Terminal</p>
+            <h2><i class="fa-solid fa-user-shield" style="color: var(--accent-primary);"></i> Initialize Terminal</h2>
+            <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 14px;">Create your master account</p>
             
             <input type="email" id="signupEmail" class="auth-input" placeholder="Email Address">
             <input type="password" id="signupPassword" class="auth-input" placeholder="Password (Min 6 chars)">
-            <button class="btn btn-primary" onclick="handleSignUp()" style="margin-bottom: 12px; padding: 12px;">Sign Up</button>
+            <button class="btn btn-primary" onclick="handleSignUp()" style="margin-bottom: 16px; padding: 14px;">Create Account</button>
             
-            <p style="font-size: 13px; color: var(--text-muted);">Already have an account? <span class="auth-link" onclick="toggleAuth('login')">Sign in here</span></p>
-            
-            <p id="signupMessage" style="color: var(--danger-text); margin-top: 15px; font-size: 12px; display: none;"></p>
+            <p style="font-size: 13px; color: var(--text-muted);">Already initialized? <span class="auth-link" onclick="toggleAuth('login')">Sign in</span></p>
+            <p id="signupMessage" style="color: var(--danger-text); margin-top: 16px; font-size: 13px; font-weight: 500; display: none;"></p>
         </div>
     </div>
 
     <!-- MAIN APP CONTAINER -->
     <div id="appContainer">
-        <div class="sidebar">
-            <div class="brand">
-                <i class="fa-solid fa-layer-group logo-icon"></i> Rashik's Tracking
-            </div>
-            
-            <div class="nav-menu">
-                <div class="nav-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-border-all"></i> Dashboard</div>
-                <div class="nav-item" onclick="switchTab('history', this)"><i class="fa-solid fa-clock-rotate-left"></i> Daily History</div>
-                <div class="nav-item" onclick="switchTab('analytics', this); loadAdvancedAnalytics();"><i class="fa-solid fa-chart-pie"></i> Analytics & Trends</div>
-                <div class="nav-item" onclick="switchTab('notes', this)"><i class="fa-solid fa-clipboard"></i> Notes Sync Test</div>
-            </div>
-            
-            <div class="sys-controls">
-                <div class="theme-selector">
-                    <button class="theme-btn active" onclick="setTheme('dark', this)">Dark</button>
-                    <button class="theme-btn" onclick="setTheme('dim', this)">Dim</button>
-                    <button class="theme-btn" onclick="setTheme('light', this)">Light</button>
-                </div>
-                <button class="btn btn-outline" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
+        
+        <!-- 🟢 NEW: Scrolling Marquee Header -->
+        <div class="marquee-bar">
+            <div class="marquee-content">
+                <span>Be Disciplined</span> • <span>Be Consistent</span> • <span>Be Profitable</span> • <span>Be Grateful</span> • <span>Alhamdulillah</span> • <span>La ilaha illallah</span> • <span>Subhanallah</span> • <span>Astaghfirullah</span> • <span>Allahu Akbar</span> • <span>La hawla wa la quwwata illa billah</span> • <span>Mashallah</span>
             </div>
         </div>
 
-        <div class="workspace">
-            <div class="top-header">
-                <div class="greeting">
-                    <h1 id="greetingText">Loading...</h1>
-                    <p><i class="fa-solid fa-shield-halved" style="color: var(--success-text);"></i> Advanced Evaluation Tracker • MNQ/MGC</p>
+        <div class="main-wrapper">
+            <div class="sidebar">
+                <div class="brand">
+                    <i class="fa-solid fa-chart-line logo-icon"></i> Rashik's Evaluation
                 </div>
-                <div class="header-actions">
-                    <button id="audioToggleBtn" class="audio-btn" onclick="toggleAudio()">
-                        <i class="fa-solid fa-bell-slash"></i> Enable Audio Alerts
-                    </button>
-                    <div class="clock-display" id="clockText">--:--:-- --</div>
+                
+                <div class="nav-menu">
+                    <div class="nav-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-border-all"></i> Dashboard</div>
+                    <div class="nav-item" onclick="switchTab('history', this)"><i class="fa-solid fa-clock-rotate-left"></i> Matrix Archives</div>
+                    <div class="nav-item" onclick="switchTab('analytics', this); loadAdvancedAnalytics();"><i class="fa-solid fa-chart-pie"></i> Deep Analytics</div>
+                    <!-- 🟢 UPDATED: Daily Notes Tab -->
+                    <div class="nav-item" onclick="switchTab('notes', this); loadNotesUI();"><i class="fa-solid fa-book-journal-whills"></i> Daily Journal & Notes</div>
+                </div>
+                
+                <div class="sys-controls">
+                    <div class="theme-selector">
+                        <button class="theme-btn active" onclick="setTheme('dark', this)">Dark</button>
+                        <button class="theme-btn" onclick="setTheme('dim', this)">Dim</button>
+                        <button class="theme-btn" onclick="setTheme('light', this)">Light</button>
+                    </div>
+                    <button class="btn btn-outline" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Save & Exit</button>
                 </div>
             </div>
 
-            <div class="content">
-                <!-- DASHBOARD -->
-                <div id="dashboard" class="tab-content active">
-                    <div class="action-panel" id="actionPanel">
-                        <div class="panel-header">
-                            <div class="panel-title" id="actionTitle">System Verification</div>
-                            <div id="countdownTimer" style="font-family: 'JetBrains Mono'; font-size: 18px; font-weight: 700;">--:--</div>
-                        </div>
-                        
-                        <div id="mathSection">
-                            <div class="math-challenge" id="mathProblem">Loading...</div>
-                            <div class="input-group">
-                                <input type="number" id="mathAnswer" class="input-control" placeholder="Enter output..." autocomplete="off">
-                                <button class="btn btn-primary" style="width: 140px; margin:0;" onclick="submitAttendance()">Execute</button>
-                            </div>
-                        </div>
-
-                        <div id="setupSection" style="display: none;">
-                            <div class="input-group">
-                                <select id="setupPair" class="input-control" style="max-width: 140px;">
-                                    <option value="NONE">No Pair</option>
-                                    <option value="MNQ">MNQ</option>
-                                    <option value="MGC">MGC</option>
-                                </select>
-                                <select id="setupReason" class="input-control">
-                                    <option value="Executed">Setup Found & Executed</option>
-                                    <option value="Missed">Missed The Entry</option>
-                                    <option value="No Setup">No Setup Found</option>
-                                    <option value="Confusing">Confusing Price Action</option>
-                                    <option value="Low RR">Low Reward Ratio</option>
-                                    <option value="No Confidence">Lacked Confidence</option>
-                                    <option value="Busy">Busy with Other Work</option>
-                                    <option value="Laziness">Skipped (Laziness)</option>
-                                </select>
-                            </div>
-                            <div class="input-group">
-                                <input type="text" id="setupNote" class="input-control" placeholder="Context (e.g., FVG entry)..." autocomplete="off">
-                                <button class="btn btn-primary" style="width: 140px; margin:0;" onclick="submitSetup()">Save Log</button>
-                            </div>
-                        </div>
+            <div class="workspace">
+                <div class="top-header">
+                    <div class="greeting">
+                        <h1 id="greetingText">Loading...</h1>
+                        <p><i class="fa-solid fa-shield-halved" style="color: var(--success-text);"></i> Terminal Active • MNQ/MGC Core</p>
                     </div>
-
-                    <div class="dashboard-grid">
-                        <div class="stats-container" style="grid-template-columns: repeat(2, 1fr);">
-                            <div class="stat-card">
-                                <div class="stat-header"><span>Daily Focus Score</span></div>
-                                <div class="stat-value" id="statScore">0%</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-header"><span>Missed Hours</span></div>
-                                <div class="stat-value" id="statMissed" style="color: var(--danger-text);">0</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-header"><span>Active Opportunities</span></div>
-                                <div class="stat-value" id="statSetups">0</div>
-                            </div>
-                            <div class="stat-card">
-                                <div class="stat-header"><span>Avg. Execution Time</span></div>
-                                <div class="stat-value" id="statExecTime" style="font-size: 20px; color: var(--accent-primary);">0s</div>
-                            </div>
-                        </div>
-                        
-                        <div class="reality-card">
-                            <div class="reality-title"><i class="fa-solid fa-robot"></i> Discipline & Reality Check</div>
-                            <div class="weakness-text" id="realityText">
-                                Not enough data. Need at least a few hours of logs today for analysis.
-                            </div>
-                            <div id="weaknessBadgeContainer"></div>
-                        </div>
-                    </div>
-
-                    <div class="card">
-                        <div class="card-header">
-                            <span>Today's Evaluation Matrix</span>
-                            <span id="currentDateDisplay" style="color: var(--text-muted);"></span>
-                        </div>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="width: 12%;">Time</th>
-                                    <th style="width: 18%;">Punctuality</th>
-                                    <th style="width: 55%;">Market Context & Psychology</th>
-                                    <th style="width: 15%;">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="matrixBody"></tbody>
-                        </table>
+                    <div class="header-actions">
+                        <button id="audioToggleBtn" class="audio-btn" onclick="toggleAudio()">
+                            <i class="fa-solid fa-bell-slash"></i> Alerts Muted
+                        </button>
+                        <div class="clock-display" id="clockText">--:--:-- --</div>
                     </div>
                 </div>
 
-                <!-- HISTORY -->
-                <div id="history" class="tab-content">
-                    <div style="display: flex; gap: 15px; margin-bottom: 24px; align-items: flex-end;">
-                        <div>
-                            <label style="display: block; font-size: 12px; color: var(--text-muted); margin-bottom: 8px;">Select Specific Date</label>
-                            <input type="date" id="historyDate" class="input-control" style="width: 200px;" onchange="loadHistory()">
-                        </div>
-                        <button class="btn btn-primary" style="width: auto; margin: 0;" onclick="loadHistory()">Analyze Date Matrix</button>
-                    </div>
-                    
-                    <div class="card">
-                        <div class="card-header"><span id="historyTitle">Archived Matrix Data</span></div>
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th style="width: 12%;">Time</th>
-                                    <th style="width: 18%;">Punctuality</th>
-                                    <th style="width: 55%;">Context & Execution Time</th>
-                                    <th style="width: 15%;">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="historyBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- ANALYTICS -->
-                <div id="analytics" class="tab-content">
-                    <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 24px;">Periodic Performance Overview</h2>
-                    
-                    <div class="stats-container" style="grid-template-columns: repeat(4, 1fr);">
-                        <div class="stat-card">
-                            <div class="stat-header"><span>This Week's Discipline</span><i class="fa-solid fa-calendar-week" style="color: var(--accent-primary);"></i></div>
-                            <div class="stat-value" id="kpiWeekScore">0%</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-header"><span id="monthLabel">This Month's Discipline</span><i class="fa-solid fa-calendar-days" style="color: var(--warning-text);"></i></div>
-                            <div class="stat-value" id="kpiMonthScore">0%</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-header"><span>Total Setup Executed</span><i class="fa-solid fa-crosshairs" style="color: var(--success-text);"></i></div>
-                            <div class="stat-value" id="kpiTotalSetups">0</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-header"><span>Top Miss Reason</span><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger-text);"></i></div>
-                            <div class="stat-value" id="kpiTopReason" style="font-size: 18px; line-height: 1.2; margin-top: 5px;">-</div>
-                        </div>
-                    </div>
-
-                    <div class="chart-grid">
-                        <div class="chart-container">
-                            <div class="stat-header" style="margin-bottom: 20px; font-size: 14px;">Focus Trend (Last 14 Days)</div>
-                            <canvas id="trendChart"></canvas>
-                        </div>
-                        <div class="chart-container">
-                            <div class="stat-header" style="margin-bottom: 20px; font-size: 14px;">Psychology Breakdown</div>
-                            <canvas id="reasonChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- NOTES TAB -->
-                <div id="notes" class="tab-content">
-                    <div class="card">
-                        <div class="card-header">
-                            <span>Live Sync Notes</span>
-                            <span style="font-size: 12px; color: var(--success-text);"><i class="fa-solid fa-cloud-arrow-up"></i> Real-time Cloud Merged</span>
-                        </div>
-                        <div style="padding: 24px;">
-                            <textarea id="syncNoteArea" class="input-control" style="width: 100%; height: 300px; resize: vertical; margin-bottom: 16px; font-family: 'Inter', sans-serif;" placeholder="Start typing... It will be saved locally instantly, even if you refresh!"></textarea>
+                <div class="content">
+                    <!-- DASHBOARD -->
+                    <div id="dashboard" class="tab-content active">
+                        <div class="action-panel" id="actionPanel">
+                            <div class="panel-header">
+                                <div class="panel-title" id="actionTitle">System Verification Required</div>
+                                <div id="countdownTimer" style="font-family: 'JetBrains Mono'; font-size: 22px; font-weight: 700;">--:--</div>
+                            </div>
                             
-                            <div style="display: flex; align-items: center; gap: 15px;">
-                                <button class="btn btn-primary" style="width: 200px; margin: 0;" onclick="saveSyncNote()">Save Note</button>
-                                <span id="noteStatus" style="font-size: 13px; font-weight: 500; display: none;"></span>
+                            <div id="mathSection">
+                                <div class="math-challenge" id="mathProblem">Loading...</div>
+                                <div class="input-group">
+                                    <input type="number" id="mathAnswer" class="input-control" placeholder="Enter output calculation..." autocomplete="off">
+                                    <button class="btn btn-primary" style="width: 160px; margin:0; font-size: 15px;" onclick="submitAttendance()">Execute</button>
+                                </div>
+                            </div>
+
+                            <div id="setupSection" style="display: none;">
+                                <div class="input-group">
+                                    <select id="setupPair" class="input-control" style="max-width: 160px; font-weight: 600;">
+                                        <option value="NONE">No Pair</option>
+                                        <option value="MNQ">MNQ</option>
+                                        <option value="MGC">MGC</option>
+                                    </select>
+                                    <select id="setupReason" class="input-control" style="font-weight: 600;">
+                                        <option value="Executed">Setup Found & Executed</option>
+                                        <option value="Missed">Missed The Entry</option>
+                                        <option value="No Setup">No Setup Found</option>
+                                        <option value="Confusing">Confusing Price Action</option>
+                                        <option value="Low RR">Low Reward Ratio</option>
+                                        <option value="No Confidence">Lacked Confidence</option>
+                                        <option value="Busy">Busy with Other Work</option>
+                                        <option value="Laziness">Skipped (Laziness)</option>
+                                    </select>
+                                </div>
+                                <div class="input-group">
+                                    <input type="text" id="setupNote" class="input-control" placeholder="Market Context (e.g., HTF FVG to LTF CISD)..." autocomplete="off">
+                                    <button class="btn btn-primary" style="width: 160px; margin:0; font-size: 15px;" onclick="submitSetup()">Commit Log</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="dashboard-grid">
+                            <div class="stats-container" style="grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));">
+                                <div class="stat-card">
+                                    <div class="stat-header"><span>Focus Score</span></div>
+                                    <div class="stat-value" id="statScore">0%</div>
+                                </div>
+                                <!-- 🟢 NEW: Active Discipline Hour Stat -->
+                                <div class="stat-card">
+                                    <div class="stat-header"><span>Disciplined Hrs</span></div>
+                                    <div class="stat-value" id="statDisciplined" style="color: var(--success-text);">0</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-header"><span>Missed Hrs</span></div>
+                                    <div class="stat-value" id="statMissed" style="color: var(--danger-text);">0</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-header"><span>Executed</span></div>
+                                    <div class="stat-value" id="statSetups">0</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-header"><span>Avg. Speed</span></div>
+                                    <div class="stat-value" id="statExecTime" style="color: var(--accent-primary);">0s</div>
+                                </div>
+                            </div>
+                            
+                            <div class="reality-card">
+                                <div class="reality-title"><i class="fa-solid fa-microchip"></i> System Evaluation</div>
+                                <div class="weakness-text" id="realityText">
+                                    Awaiting sufficient data matrix. Log hours to analyze behavior patterns.
+                                </div>
+                                <div><span id="weaknessBadgeContainer"></span></div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <span>Today's Execution Matrix</span>
+                                <span id="currentDateDisplay" style="color: var(--text-muted); font-size: 14px;"></span>
+                            </div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 12%;">Time</th>
+                                        <th style="width: 18%;">Punctuality</th>
+                                        <th style="width: 55%;">Market Context & Psychology</th>
+                                        <th style="width: 15%;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="matrixBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- HISTORY -->
+                    <div id="history" class="tab-content">
+                        <div style="display: flex; gap: 16px; margin-bottom: 32px; align-items: flex-end;">
+                            <div>
+                                <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Retrieve Archive Date</label>
+                                <input type="date" id="historyDate" class="input-control" style="width: 220px;" onchange="loadHistory()">
+                            </div>
+                            <button class="btn btn-primary" style="width: auto; margin: 0; padding: 14px 24px;" onclick="loadHistory()"><i class="fa-solid fa-magnifying-glass"></i> Extract Matrix</button>
+                        </div>
+                        
+                        <div class="card">
+                            <div class="card-header"><span id="historyTitle">Archived Data</span></div>
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th style="width: 12%;">Time</th>
+                                        <th style="width: 18%;">Punctuality</th>
+                                        <th style="width: 55%;">Context & Metrics</th>
+                                        <th style="width: 15%;">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ANALYTICS -->
+                    <div id="analytics" class="tab-content">
+                        <h2 style="font-size: 22px; font-weight: 700; margin-bottom: 32px; letter-spacing: -0.5px;">Macro Performance Overview</h2>
+                        
+                        <div class="stats-container" style="grid-template-columns: repeat(4, 1fr);">
+                            <div class="stat-card">
+                                <div class="stat-header"><span>7-Day Discipline</span><i class="fa-solid fa-calendar-week" style="color: var(--accent-primary); font-size: 16px;"></i></div>
+                                <div class="stat-value" id="kpiWeekScore">0%</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-header"><span id="monthLabel">Monthly Discipline</span><i class="fa-solid fa-calendar-days" style="color: var(--warning-text); font-size: 16px;"></i></div>
+                                <div class="stat-value" id="kpiMonthScore">0%</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-header"><span>Total Executions</span><i class="fa-solid fa-crosshairs" style="color: var(--success-text); font-size: 16px;"></i></div>
+                                <div class="stat-value" id="kpiTotalSetups">0</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-header"><span>Core Weakness</span><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger-text); font-size: 16px;"></i></div>
+                                <div class="stat-value" id="kpiTopReason" style="font-size: 20px; line-height: 1.2; margin-top: 8px;">-</div>
+                            </div>
+                        </div>
+
+                        <div class="chart-grid">
+                            <div class="chart-container">
+                                <div class="stat-header" style="margin-bottom: 24px; font-size: 15px;">Focus Trajectory (Last 14 Days)</div>
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                            <div class="chart-container">
+                                <div class="stat-header" style="margin-bottom: 24px; font-size: 15px;">Psychological Breakdown</div>
+                                <canvas id="reasonChart"></canvas>
                             </div>
                         </div>
                     </div>
-                </div>
 
+                    <!-- 🟢 NEW: DAILY JOURNAL & NOTES TAB -->
+                    <div id="notes" class="tab-content">
+                        <div class="notes-layout">
+                            <div class="notes-sidebar">
+                                <div>
+                                    <label style="display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px;">Journal Date</label>
+                                    <input type="date" id="noteDatePicker" class="input-control" onchange="loadNotesUI()">
+                                </div>
+                                <button class="btn btn-outline" style="border-style: dashed;" onclick="createNewNote()">
+                                    <i class="fa-solid fa-plus"></i> Create New Note
+                                </button>
+                                <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 8px 0;">
+                                <div class="notes-list" id="notesListContainer">
+                                    <!-- Notes list populated here -->
+                                </div>
+                            </div>
+
+                            <div class="note-editor" id="noteEditorContainer" style="display: none;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <input type="text" id="noteTitleInput" class="note-title-input" placeholder="Journal Title..." oninput="autoSaveNoteLocally()">
+                                    <button class="btn btn-primary" style="width: auto; margin: 0; padding: 10px 24px;" onclick="saveNoteToCloud()">
+                                        <i class="fa-solid fa-cloud-arrow-up"></i> Save to Cloud
+                                    </button>
+                                </div>
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <span id="noteTimeDisplay" style="font-size: 12px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;"></span>
+                                    <span id="noteSaveStatus" style="font-size: 12px; font-weight: 600; display: none;"></span>
+                                </div>
+                                <textarea id="noteBodyInput" class="note-body-input" placeholder="Log your market context, psychology, thoughts, or strategies here. Auto-saves locally as you type..." oninput="autoSaveNoteLocally()"></textarea>
+                                
+                                <div style="display: flex; justify-content: flex-end; margin-top: auto;">
+                                     <button class="btn btn-danger" style="width: auto; padding: 8px 16px; font-size: 12px;" onclick="deleteCurrentNote()">
+                                        <i class="fa-solid fa-trash"></i> Delete Note
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="empty-note-state" id="emptyNoteState">
+                                <i class="fa-solid fa-book-open" style="font-size: 48px; opacity: 0.5;"></i>
+                                <h3 style="font-size: 18px; font-weight: 600;">No Note Selected</h3>
+                                <p style="font-size: 14px;">Select a note from the list or create a new one.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
@@ -397,11 +474,9 @@
         let reasonChartInst = null;
         let isCheckingState = false; 
 
-        // 🟢 FIX 1: Auto-save to Local Storage on every keystroke!
-        document.getElementById('syncNoteArea').addEventListener('input', function(e) {
-            appData.sharedNotes = e.target.value;
-            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
-        });
+        // 🟢 Note System Variables
+        let currentNoteDateStr = '';
+        let activeNoteId = null;
 
         function toggleAuth(view) {
             document.getElementById('loginCard').classList.remove('active');
@@ -451,7 +526,6 @@
             
             if(!email || password.length < 6) { 
                 msgEl.innerText = "Please provide a valid email and a 6+ char password."; 
-                msgEl.style.color = "var(--danger-text)";
                 msgEl.style.display = 'block'; 
                 return; 
             }
@@ -459,13 +533,12 @@
             const { error } = await supabaseClient.auth.signUp({ email, password });
             if (error) { 
                 msgEl.innerText = error.message; 
-                msgEl.style.color = "var(--danger-text)";
                 msgEl.style.display = 'block'; 
             } else { 
-                msgEl.innerText = "Account created successfully! You can now log in."; 
+                msgEl.innerText = "Account initialized! You can now sign in."; 
                 msgEl.style.color = "var(--success-text)"; 
                 msgEl.style.display = 'block'; 
-                setTimeout(() => { toggleAuth('login'); }, 2000);
+                setTimeout(() => { toggleAuth('login'); msgEl.style.color = "var(--danger-text)"; msgEl.style.display = 'none'; }, 2000);
             }
         }
 
@@ -475,8 +548,7 @@
             const msgEl = document.getElementById('loginMessage');
             
             if(!email || !password) {
-                msgEl.innerText = "Please enter both email and password.";
-                msgEl.style.color = "var(--danger-text)";
+                msgEl.innerText = "Please enter both credentials.";
                 msgEl.style.display = 'block';
                 return;
             }
@@ -484,7 +556,6 @@
             const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
             if (error) { 
                 msgEl.innerText = error.message; 
-                msgEl.style.color = "var(--danger-text)"; 
                 msgEl.style.display = 'block'; 
             } else { 
                 msgEl.style.display = 'none';
@@ -493,6 +564,7 @@
         }
 
         async function handleLogout() {
+            await saveCloudData(false); // Save before exit
             await supabaseClient.auth.signOut();
             currentUser = null; 
             appData = {};
@@ -501,7 +573,7 @@
             document.getElementById('appContainer').style.display = 'none';
         }
 
-        // 🟢 FIX 2: Bulletproof Loading System
+        // --- Data Loading & Saving ---
         async function loadCloudData() {
             if (!currentUser) return;
             
@@ -510,10 +582,11 @@
                     .from('journal_data')
                     .select('app_data')
                     .eq('user_id', currentUser.id)
-                    .maybeSingle(); // Prevents multiple row error
+                    .maybeSingle();
                     
                 if (!error && data && data.app_data) { 
                     appData = data.app_data;
+                    ensureDataStructure();
                     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
                 } else {
                     loadLocalFallback();
@@ -522,34 +595,41 @@
                 loadLocalFallback();
             }
 
-            // Restore Note to Textarea
-            if (appData.sharedNotes !== undefined) {
-                const noteArea = document.getElementById('syncNoteArea');
-                if (document.activeElement !== noteArea) {
-                    noteArea.value = appData.sharedNotes;
-                }
+            // Sync Notes UI without stealing focus
+            if(document.getElementById('notes').classList.contains('active')) {
+                refreshNotesListOnly(); 
             }
         }
 
         function loadLocalFallback() {
             const localFallback = localStorage.getItem(LOCAL_STORAGE_KEY);
             if(localFallback) {
-                try { appData = JSON.parse(localFallback); } 
-                catch(e) { appData = {}; }
+                try { appData = JSON.parse(localFallback); ensureDataStructure(); } 
+                catch(e) { appData = {}; ensureDataStructure(); }
+            } else {
+                ensureDataStructure();
             }
         }
 
-        // 🟢 FIX 3: Safe Save - Bypassing Upsert Errors & Showing Exact Error
+        // Makes sure every day has the notes array, prevents undefined errors in future updates
+        function ensureDataStructure() {
+            const today = getTodayStr();
+            if (!appData[today]) {
+                appData[today] = { notes: [] };
+                for (let h = START_HOUR; h <= END_HOUR; h++) { 
+                    appData[today][h] = { attendance: null, setup: null, pair: "NONE", reason: "", missed: false, execAttTime: null, execSetupTime: null }; 
+                }
+            }
+            if(!appData[today].notes) appData[today].notes = [];
+        }
+
         async function saveCloudData(render = true) {
             if (!currentUser) return;
-            
-            // Instantly save locally
+            ensureDataStructure();
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
 
             let cloudErrorMsg = null;
-            
             try {
-                // Check if user row exists
                 const { data: existingRow } = await supabaseClient
                     .from('journal_data')
                     .select('user_id')
@@ -558,110 +638,209 @@
 
                 let res;
                 if (existingRow) {
-                    // Update existing
-                    res = await supabaseClient.from('journal_data')
-                        .update({ app_data: appData })
-                        .eq('user_id', currentUser.id);
+                    res = await supabaseClient.from('journal_data').update({ app_data: appData }).eq('user_id', currentUser.id);
                 } else {
-                    // Insert new
-                    res = await supabaseClient.from('journal_data')
-                        .insert([{ user_id: currentUser.id, app_data: appData }]);
+                    res = await supabaseClient.from('journal_data').insert([{ user_id: currentUser.id, app_data: appData }]);
                 }
-
                 if (res.error) cloudErrorMsg = res.error.message;
-            } catch (err) {
-                cloudErrorMsg = err.message;
-            }
+            } catch (err) { cloudErrorMsg = err.message; }
             
-            const statusEl = document.getElementById('noteStatus');
-            if (cloudErrorMsg) {
-                console.error("Cloud Save Failed:", cloudErrorMsg);
-                if(statusEl) {
-                    statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Error: ${cloudErrorMsg} (Saved Locally)`;
-                    statusEl.style.color = "var(--danger-text)";
-                    statusEl.style.display = 'inline-block';
-                }
-            } else {
-                if(statusEl) {
-                    statusEl.innerHTML = `<i class="fa-solid fa-check"></i> Safely Synced to Cloud & Local`;
-                    statusEl.style.color = "var(--success-text)";
-                    statusEl.style.display = 'inline-block';
-                }
-            }
+            if (cloudErrorMsg) console.error("Cloud Save Failed:", cloudErrorMsg);
             
             if(render) {
-                if(document.getElementById('dashboard').classList.contains('active')) { 
-                    renderMatrix(); 
-                    updateStats(); 
-                    analyzeWeakness(); 
+                if(document.getElementById('dashboard').classList.contains('active')) { renderMatrix(); updateStats(); analyzeWeakness(); }
+                if(document.getElementById('analytics').classList.contains('active')) { loadAdvancedAnalytics(); }
+            }
+            return !cloudErrorMsg; // true if success
+        }
+
+        // --- 🟢 NEW: Daily Notes Logic ---
+        function loadNotesUI() {
+            const picker = document.getElementById('noteDatePicker');
+            if(!picker.value) picker.value = getTodayStr();
+            currentNoteDateStr = picker.value;
+            
+            // Ensure date object exists
+            if (!appData[currentNoteDateStr]) {
+                appData[currentNoteDateStr] = { notes: [] };
+                for (let h = START_HOUR; h <= END_HOUR; h++) { 
+                    appData[currentNoteDateStr][h] = { attendance: null, setup: null, pair: "NONE", reason: "", missed: false, execAttTime: null, execSetupTime: null }; 
                 }
-                if(document.getElementById('analytics').classList.contains('active')) { 
-                    loadAdvancedAnalytics(); 
-                }
+            }
+            if(!appData[currentNoteDateStr].notes) appData[currentNoteDateStr].notes = [];
+
+            activeNoteId = null;
+            document.getElementById('noteEditorContainer').style.display = 'none';
+            document.getElementById('emptyNoteState').style.display = 'flex';
+            
+            refreshNotesListOnly();
+        }
+
+        function refreshNotesListOnly() {
+            if(!currentNoteDateStr) return;
+            const container = document.getElementById('notesListContainer');
+            container.innerHTML = '';
+            
+            const notes = appData[currentNoteDateStr]?.notes || [];
+            
+            if(notes.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding: 20px; color: var(--text-muted); font-size: 13px;">No notes found for this date.</div>`;
+                return;
+            }
+
+            // Reverse to show newest first
+            [...notes].reverse().forEach(note => {
+                const el = document.createElement('div');
+                el.className = `note-item ${note.id === activeNoteId ? 'active' : ''}`;
+                el.onclick = () => openNote(note.id);
+                
+                const title = note.title.trim() === '' ? 'Untitled Note' : note.title;
+                el.innerHTML = `
+                    <div class="note-item-title">${title}</div>
+                    <div class="note-item-time"><i class="fa-regular fa-clock"></i> ${note.time}</div>
+                `;
+                container.appendChild(el);
+            });
+        }
+
+        function createNewNote() {
+            const now = new Date();
+            const ampm = now.getHours() >= 12 ? 'PM' : 'AM'; 
+            let hour = now.getHours() % 12; hour = hour ? hour : 12;
+            const timeStr = `${hour.toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')} ${ampm}`;
+
+            const newNote = {
+                id: Date.now().toString(),
+                title: '',
+                content: '',
+                time: timeStr
+            };
+
+            appData[currentNoteDateStr].notes.push(newNote);
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
+            
+            openNote(newNote.id);
+            refreshNotesListOnly();
+            document.getElementById('noteTitleInput').focus();
+        }
+
+        function openNote(id) {
+            activeNoteId = id;
+            const note = appData[currentNoteDateStr].notes.find(n => n.id === id);
+            if(!note) return;
+
+            document.getElementById('emptyNoteState').style.display = 'none';
+            document.getElementById('noteEditorContainer').style.display = 'flex';
+            
+            document.getElementById('noteTitleInput').value = note.title;
+            document.getElementById('noteBodyInput').value = note.content;
+            document.getElementById('noteTimeDisplay').innerHTML = `Created: ${note.time}`;
+            document.getElementById('noteSaveStatus').style.display = 'none';
+            
+            refreshNotesListOnly(); // update active class
+        }
+
+        function autoSaveNoteLocally() {
+            if(!activeNoteId) return;
+            const title = document.getElementById('noteTitleInput').value;
+            const content = document.getElementById('noteBodyInput').value;
+            
+            const noteIndex = appData[currentNoteDateStr].notes.findIndex(n => n.id === activeNoteId);
+            if(noteIndex !== -1) {
+                appData[currentNoteDateStr].notes[noteIndex].title = title;
+                appData[currentNoteDateStr].notes[noteIndex].content = content;
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
+                refreshNotesListOnly(); // updates title in sidebar dynamically
             }
         }
 
-        async function saveSyncNote() {
-            const noteContent = document.getElementById('syncNoteArea').value;
-            appData.sharedNotes = noteContent;
-            await saveCloudData(false);
+        async function saveNoteToCloud() {
+            if(!activeNoteId) return;
             
-            const statusEl = document.getElementById('noteStatus');
-            setTimeout(() => { if(statusEl) statusEl.style.display = 'none'; }, 6000);
+            const statusEl = document.getElementById('noteSaveStatus');
+            statusEl.style.display = 'block';
+            statusEl.style.color = 'var(--text-muted)';
+            statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Syncing...`;
+            
+            // 1. Fetch latest to prevent overwrite
+            await loadCloudData();
+            
+            // 2. Re-apply local changes to the memory object
+            const title = document.getElementById('noteTitleInput').value;
+            const content = document.getElementById('noteBodyInput').value;
+            const noteIndex = appData[currentNoteDateStr].notes.findIndex(n => n.id === activeNoteId);
+            if(noteIndex !== -1) {
+                appData[currentNoteDateStr].notes[noteIndex].title = title;
+                appData[currentNoteDateStr].notes[noteIndex].content = content;
+            }
+            
+            // 3. Push
+            const success = await saveCloudData(false);
+            
+            if(success) {
+                statusEl.style.color = 'var(--success-text)';
+                statusEl.innerHTML = `<i class="fa-solid fa-check-double"></i> Synced to Cloud`;
+            } else {
+                statusEl.style.color = 'var(--warning-text)';
+                statusEl.innerHTML = `<i class="fa-solid fa-cloud-arrow-down"></i> Local Only`;
+            }
+            setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
         }
 
+        async function deleteCurrentNote() {
+            if(!activeNoteId) return;
+            if(confirm("Are you sure you want to delete this note?")) {
+                appData[currentNoteDateStr].notes = appData[currentNoteDateStr].notes.filter(n => n.id !== activeNoteId);
+                await saveCloudData(false);
+                activeNoteId = null;
+                document.getElementById('noteEditorContainer').style.display = 'none';
+                document.getElementById('emptyNoteState').style.display = 'flex';
+                refreshNotesListOnly();
+            }
+        }
+
+        // --- Core Rules & Matrix ---
         async function submitAttendance() {
             if (parseInt(document.getElementById('mathAnswer').value) === currentMathAns) {
-                const now = new Date(); 
-                const h = now.getHours();
-                const today = getTodayStr();
-                
+                const now = new Date(); const h = now.getHours(); const today = getTodayStr();
                 await loadCloudData();
-                if (!appData[today]) initTodayData(); 
-                
+                ensureDataStructure(); 
                 appData[today][h].attendance = true; 
                 appData[today][h].execAttTime = (now.getMinutes() * 60) + now.getSeconds(); 
-                
                 await saveCloudData(); 
                 document.getElementById('actionPanel').classList.remove('active');
             } else { 
-                alert("Verification failed. Try again."); 
+                alert("Verification failed. Calculate carefully."); 
             }
         }
 
         async function submitSetup() {
-            const now = new Date(); 
-            const h = now.getHours();
-            const today = getTodayStr();
-            
+            const now = new Date(); const h = now.getHours(); const today = getTodayStr();
             await loadCloudData();
-            if (!appData[today]) initTodayData(); 
-            
+            ensureDataStructure();
             appData[today][h].setup = document.getElementById('setupNote').value.trim(); 
             appData[today][h].pair = document.getElementById('setupPair').value; 
             appData[today][h].reason = document.getElementById('setupReason').value; 
             appData[today][h].execSetupTime = ((now.getMinutes()-5) * 60) + now.getSeconds(); 
-            
             await saveCloudData(); 
             document.getElementById('actionPanel').classList.remove('active'); 
             document.getElementById('setupNote').value = '';
         }
 
         function initApp() {
-            initTodayData(); 
+            ensureDataStructure();
             renderMatrix(); 
             updateStats(); 
             analyzeWeakness(); 
             setInterval(tick, 1000); 
             tick();
             
+            // Background Auto Sync
             setInterval(async () => {
-                if (currentUser) {
+                if (currentUser && !document.getElementById('notes').classList.contains('active')) {
                     await loadCloudData();
                     if(document.getElementById('dashboard').classList.contains('active')) {
-                        renderMatrix(); 
-                        updateStats(); 
-                        analyzeWeakness();
+                        renderMatrix(); updateStats(); analyzeWeakness();
                     }
                 }
             }, 10000);
@@ -674,37 +853,17 @@
                 btn.classList.add('active'); 
                 btn.innerHTML = '<i class="fa-solid fa-bell"></i> Alerts Active';
                 document.getElementById('candleAlert').play().then(()=>{ 
-                    document.getElementById('candleAlert').pause(); 
-                    document.getElementById('candleAlert').currentTime = 0; 
+                    document.getElementById('candleAlert').pause(); document.getElementById('candleAlert').currentTime = 0; 
                 }).catch(e=>{});
             } else { 
                 btn.classList.remove('active'); 
-                btn.innerHTML = '<i class="fa-solid fa-bell-slash"></i> Enable Audio Alerts'; 
+                btn.innerHTML = '<i class="fa-solid fa-bell-slash"></i> Alerts Muted'; 
             }
         }
 
         function getTodayStr() { 
-            const now = new Date(); 
-            const offset = now.getTimezoneOffset() * 60000;
+            const now = new Date(); const offset = now.getTimezoneOffset() * 60000;
             return (new Date(now - offset)).toISOString().split('T')[0]; 
-        }
-
-        function initTodayData() {
-            const today = getTodayStr();
-            if (!appData[today]) {
-                appData[today] = {};
-                for (let h = START_HOUR; h <= END_HOUR; h++) { 
-                    appData[today][h] = { 
-                        attendance: null, 
-                        setup: null, 
-                        pair: "NONE", 
-                        reason: "", 
-                        missed: false, 
-                        execAttTime: null, 
-                        execSetupTime: null 
-                    }; 
-                }
-            }
         }
 
         function setTheme(theme, btnEl) {
@@ -733,50 +892,45 @@
         }
 
         function formatHour(h) {
-            const ampm = h >= 12 ? 'PM' : 'AM'; 
-            let hour = h % 12; 
-            hour = hour ? hour : 12;
+            const ampm = h >= 12 ? 'PM' : 'AM'; let hour = h % 12; hour = hour ? hour : 12;
             return `${hour.toString().padStart(2, '0')}:00 ${ampm}`;
         }
 
         function generateRowHTML(h, session, isFutureHour, isCurrentHour, isPastDate) {
             let attStatus, finalStatus, cellContent = '';
             if (isFutureHour) {
-                attStatus = '<span style="color:var(--text-muted);">Upcoming</span>'; 
-                finalStatus = '<span style="color:var(--text-muted);">Pending</span>'; 
-                cellContent = '<span style="opacity: 0.3;">Awaiting time...</span>';
+                attStatus = '<span style="color:var(--text-muted);"><i class="fa-regular fa-hourglass-half"></i></span>'; 
+                finalStatus = '<span style="color:var(--text-muted);">...</span>'; 
+                cellContent = '<span style="opacity: 0.3;">Awaiting chronological sequence...</span>';
             } else {
                 let isMissedAtt = session.attendance === false || session.missed === true || (session.attendance === null && (isPastDate || h < new Date().getHours()));
                 if (session.attendance === true) attStatus = '<span style="color:var(--success-text);"><i class="fa-solid fa-check"></i> Present</span>';
                 else if (isMissedAtt) attStatus = '<span style="color:var(--danger-text);">Missed</span>';
-                else attStatus = '<span style="color:var(--accent-primary);">Pending</span>';
+                else attStatus = '<span style="color:var(--accent-primary); font-weight:600;"><i class="fa-solid fa-spinner fa-spin"></i> Active</span>';
 
                 let isMissedFinal = session.missed || (session.setup === null && (isPastDate || h < new Date().getHours()));
-                if (session.attendance && session.setup !== null) finalStatus = '<span style="color:var(--success-text);">Completed</span>';
+                if (session.attendance && session.setup !== null) finalStatus = '<span style="color:var(--success-text);"><i class="fa-solid fa-check-double"></i> Complete</span>';
                 else if (isMissedFinal) finalStatus = '<span style="color:var(--danger-text);">Failed</span>';
-                else if (isCurrentHour) finalStatus = '<span style="color:var(--warning-text);">Active</span>';
+                else if (isCurrentHour) finalStatus = '<span style="color:var(--warning-text);">Pending Log</span>';
                 else finalStatus = '<span style="color:var(--danger-text);">Failed</span>';
 
                 let pairTag = (session.pair && session.pair !== "NONE") ? `<span class="badge-pair">${session.pair}</span>` : '';
                 let reasonTag = (session.reason && session.reason !== "") ? `<span class="badge-reason">${session.reason}</span>` : '';
-                let note = session.setup ? `${session.setup}` : '';
+                let note = session.setup ? `<span style="font-weight: 500;">${session.setup}</span>` : '';
                 let timeLogs = '';
-                if(session.execAttTime) timeLogs += `Att. Time: ${session.execAttTime}s `;
-                if(session.execSetupTime) timeLogs += `| Setup Time: ${session.execSetupTime}s`;
+                if(session.execAttTime) timeLogs += `Verify: ${session.execAttTime}s `;
+                if(session.execSetupTime) timeLogs += `| Log: ${session.execSetupTime}s`;
 
-                cellContent = `<div>${pairTag}${reasonTag} <span>${note}</span></div>`;
-                if(timeLogs !== '') cellContent += `<div class="exec-time"><i class="fa-regular fa-clock"></i> ${timeLogs}</div>`;
+                cellContent = `<div style="margin-bottom:4px;">${pairTag}${reasonTag} ${note}</div>`;
+                if(timeLogs !== '') cellContent += `<div class="exec-time"><i class="fa-solid fa-stopwatch"></i> ${timeLogs}</div>`;
             }
-            return `<td style="font-family:'JetBrains Mono'; font-weight:600;">${formatHour(h)}</td><td>${attStatus}</td><td>${cellContent}</td><td style="font-weight:600;">${finalStatus}</td>`;
+            return `<td style="font-family:'JetBrains Mono'; font-weight:700; color: var(--text-main);">${formatHour(h)}</td><td>${attStatus}</td><td>${cellContent}</td><td style="font-weight:600;">${finalStatus}</td>`;
         }
 
         function renderMatrix() {
-            initTodayData(); 
-            const today = getTodayStr(); 
-            const data = appData[today]; 
-            const tbody = document.getElementById('matrixBody'); 
+            ensureDataStructure(); 
+            const today = getTodayStr(); const data = appData[today]; const tbody = document.getElementById('matrixBody'); 
             const currentHour = new Date().getHours();
-            
             document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
             tbody.innerHTML = '';
             for (let h = START_HOUR; h <= END_HOUR; h++) {
@@ -788,11 +942,9 @@
         }
 
         function updateStats() {
-            const today = getTodayStr(); 
-            const data = appData[today]; 
+            const today = getTodayStr(); const data = appData[today]; 
             let completed = 0, setups = 0, missed = 0, totalAttTime = 0, validAttCount = 0;
-            const total = (END_HOUR - START_HOUR) + 1; 
-            const currentHour = new Date().getHours();
+            const total = (END_HOUR - START_HOUR) + 1; const currentHour = new Date().getHours();
 
             for (let h = START_HOUR; h <= END_HOUR; h++) {
                 if (data[h].attendance === true && data[h].setup !== null) completed++;
@@ -809,11 +961,12 @@
             document.getElementById('statMissed').innerText = missed;
             document.getElementById('statSetups').innerText = setups; 
             document.getElementById('statExecTime').innerText = avgTime > 0 ? `${avgTime}s` : '0s';
+            // 🟢 NEW: Update Disciplined Hours Stat
+            document.getElementById('statDisciplined').innerText = completed;
         }
 
         function analyzeWeakness() {
-            const today = getTodayStr(); 
-            const data = appData[today]; 
+            const today = getTodayStr(); const data = appData[today]; 
             let lazyCount = 0, missedCount = 0, totalAttTime = 0, attCount = 0, confCount = 0;
             const currentHour = new Date().getHours();
 
@@ -827,23 +980,17 @@
             let msg = "", tag = "";
 
             if (missedCount === 0 && attCount > 0 && lazyCount === 0) {
-                msg = "Your discipline is rock solid today. Maintaining this consistency will ensure your success in the prop firm."; 
-                tag = "Solid Discipline";
+                msg = "Your discipline is rock solid today. Maintaining this consistency will compound into significant edge."; tag = "Solid Discipline";
             } else if (lazyCount >= 2) {
-                msg = "You are skipping sessions due to laziness. Remember, prop firm funds are real money. This behavior will wash you out of the market."; 
-                tag = "Weakness: Laziness";
+                msg = "You are skipping sessions due to laziness. Prop firm capital requires professional execution. This will drain your account."; tag = "Critical Weakness: Laziness";
             } else if (missedCount >= 3) {
-                msg = "You have missed multiple sessions. Trading is a business; without punctuality, long-term profitability is impossible."; 
-                tag = "Weakness: Poor Consistency";
+                msg = "Multiple sessions missed. Trading is a high-performance business; lack of punctuality destroys edge."; tag = "Weakness: Poor Consistency";
             } else if (confCount >= 2) {
-                msg = "You are hesitating due to a lack of confidence or confusion. You need to put more effort into your strategy and backtesting."; 
-                tag = "Weakness: Lack of Confidence";
+                msg = "Hesitation detected. You need to review your model criteria to eliminate confusion during live price action."; tag = "Weakness: Lack of Confidence";
             } else if (avgAttTime > 180) {
-                msg = "Your execution time (averaging over 3 mins) is too slow. In the futures market, this hesitation will cause you to miss prime entries."; 
-                tag = "Weakness: Slow Execution";
+                msg = "Execution speed averaging over 3 mins. Hesitation at support/resistance will cause you to miss optimal entries."; tag = "Weakness: Slow Execution";
             } else { 
-                msg = "Insufficient data or average performance today. Keep your focus sharp."; 
-                tag = "Analyzing..."; 
+                msg = "Insufficient matrix data. Continue logging hours to establish psychological baseline."; tag = "Compiling Data..."; 
             }
 
             document.getElementById('realityText').innerText = msg; 
@@ -851,22 +998,14 @@
         }
 
         function loadHistory() {
-            const dateStr = document.getElementById('historyDate').value; 
-            const data = appData[dateStr]; 
-            const tbody = document.getElementById('historyBody');
-            const todayStr = getTodayStr(); 
-            const currentHour = new Date().getHours();
+            const dateStr = document.getElementById('historyDate').value; const data = appData[dateStr]; 
+            const tbody = document.getElementById('historyBody'); const todayStr = getTodayStr(); const currentHour = new Date().getHours();
             
-            document.getElementById('historyTitle').innerText = `Matrix Data: ${dateStr}`; 
-            tbody.innerHTML = '';
-            
-            const isFutureDate = dateStr > todayStr; 
-            const isPastDate = dateStr < todayStr; 
-            const isToday = dateStr === todayStr;
+            document.getElementById('historyTitle').innerText = `Archived Matrix: ${dateStr}`; tbody.innerHTML = '';
+            const isFutureDate = dateStr > todayStr; const isPastDate = dateStr < todayStr; const isToday = dateStr === todayStr;
             
             if(!data && !isFutureDate) { 
-                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted);">No records found.</td></tr>`; 
-                return; 
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted); font-size: 14px;">No historical records found for this date.</td></tr>`; return; 
             }
             
             for (let h = START_HOUR; h <= END_HOUR; h++) {
@@ -881,10 +1020,9 @@
         function getPeriodScore(datesArray) {
             let completed = 0, totalEligible = 0;
             datesArray.forEach(d => {
-                if(appData[d]) { 
+                if(appData[d] && appData[d][START_HOUR]) { 
                     for(let h=START_HOUR; h<=END_HOUR; h++) { 
-                        totalEligible++; 
-                        if(appData[d][h].attendance && appData[d][h].setup) completed++; 
+                        totalEligible++; if(appData[d][h].attendance && appData[d][h].setup) completed++; 
                     } 
                 }
             });
@@ -895,9 +1033,7 @@
             const allDates = Object.keys(appData).sort();
             const last7Days = []; 
             for(let i=0; i<7; i++) { 
-                let d = new Date(); 
-                d.setDate(d.getDate() - i); 
-                let offset = d.getTimezoneOffset() * 60000; 
+                let d = new Date(); d.setDate(d.getDate() - i); let offset = d.getTimezoneOffset() * 60000; 
                 last7Days.push(new Date(d - offset).toISOString().split('T')[0]); 
             }
             
@@ -906,8 +1042,7 @@
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             document.getElementById('monthLabel').innerText = `${monthNames[parseInt(currentMonthPrefix.split('-')[1]) - 1]} Discipline`;
 
-            let reasonCount = {}; 
-            let totalSetups = 0;
+            let reasonCount = {}; let totalSetups = 0;
             allDates.forEach(d => {
                 for(let h=START_HOUR; h<=END_HOUR; h++) {
                     if(appData[d] && appData[d][h] && appData[d][h].attendance) {
@@ -925,85 +1060,44 @@
 
             const last14Dates = []; 
             for(let i=13; i>=0; i--) { 
-                let d = new Date(); 
-                d.setDate(d.getDate() - i); 
-                let offset = d.getTimezoneOffset() * 60000; 
+                let d = new Date(); d.setDate(d.getDate() - i); let offset = d.getTimezoneOffset() * 60000; 
                 last14Dates.push(new Date(d - offset).toISOString().split('T')[0]); 
             }
             let scores14d = last14Dates.map(d => getPeriodScore([d]));
 
-            Chart.defaults.color = '#a1a1aa'; 
-            Chart.defaults.font.family = 'Inter';
+            Chart.defaults.color = '#a1a1aa'; Chart.defaults.font.family = 'Inter';
             if(trendChartInst) trendChartInst.destroy();
             const ctx1 = document.getElementById('trendChart').getContext('2d');
             let gradient = ctx1.createLinearGradient(0, 0, 0, 400); 
-            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); 
-            gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.4)'); gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
             
             trendChartInst = new Chart(ctx1, { 
                 type: 'line', 
                 data: { 
                     labels: last14Dates.map(d=>d.slice(5)), 
-                    datasets: [{ 
-                        label: 'Score (%)', 
-                        data: scores14d, 
-                        borderColor: '#3b82f6', 
-                        backgroundColor: gradient, 
-                        fill: true, 
-                        tension: 0.4, 
-                        pointBackgroundColor: '#18181b', 
-                        pointBorderColor: '#3b82f6' 
-                    }] 
+                    datasets: [{ label: 'Focus Trajectory', data: scores14d, borderColor: '#3b82f6', backgroundColor: gradient, fill: true, tension: 0.4, pointBackgroundColor: '#18181b', pointBorderColor: '#3b82f6', borderWidth: 3 }] 
                 }, 
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    scales: { 
-                        y: { beginAtZero: true, max: 100, grid: { color: '#27272a' } }, 
-                        x: { grid: { display: false } } 
-                    }, 
-                    plugins: { legend: { display: false } } 
-                } 
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100, grid: { color: '#27272a' } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } } 
             });
 
             if(reasonChartInst) reasonChartInst.destroy();
             const ctx2 = document.getElementById('reasonChart').getContext('2d');
             reasonChartInst = new Chart(ctx2, { 
                 type: 'doughnut', 
-                data: { 
-                    labels: Object.keys(reasonCount), 
-                    datasets: [{ 
-                        data: Object.values(reasonCount), 
-                        backgroundColor: ['#f59e0b', '#ef4444', '#10b981', '#8b5cf6', '#64748b', '#3b82f6'], 
-                        borderWidth: 0 
-                    }] 
-                }, 
-                options: { 
-                    responsive: true, 
-                    maintainAspectRatio: false, 
-                    cutout: '75%', 
-                    plugins: { 
-                        legend: { position: 'right', labels: { boxWidth: 12, usePointStyle: true } } 
-                    } 
-                } 
+                data: { labels: Object.keys(reasonCount), datasets: [{ data: Object.values(reasonCount), backgroundColor: ['#f59e0b', '#ef4444', '#10b981', '#8b5cf6', '#64748b', '#3b82f6'], borderWidth: 0, hoverOffset: 4 }] }, 
+                options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { boxWidth: 12, usePointStyle: true, font: {size: 13} } } } } 
             });
         }
 
         let lastPlayedHour = -1;
         function tick() {
-            const now = new Date(); 
-            const h = now.getHours(); 
-            const m = now.getMinutes(); 
-            const s = now.getSeconds();
-            const ampm = h >= 12 ? 'PM' : 'AM'; 
-            let displayH = h % 12; 
-            displayH = displayH ? displayH : 12;
+            const now = new Date(); const h = now.getHours(); const m = now.getMinutes(); const s = now.getSeconds();
+            const ampm = h >= 12 ? 'PM' : 'AM'; let displayH = h % 12; displayH = displayH ? displayH : 12;
             
             document.getElementById('clockText').innerText = `${displayH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} ${ampm}`;
             
             if (h >= START_HOUR && h <= END_HOUR && m === 0 && s === 0 && audioEnabled && lastPlayedHour !== h) { 
-                document.getElementById('candleAlert').play().catch(e=>{}); 
-                lastPlayedHour = h; 
+                document.getElementById('candleAlert').play().catch(e=>{}); lastPlayedHour = h; 
             }
             document.getElementById('greetingText').innerText = `${h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : "Good Evening"}, Rashik`;
             processRules(h, m, s);
@@ -1011,75 +1105,49 @@
 
         function processRules(h, m, s) {
             if(!document.getElementById('dashboard').classList.contains('active')) return;
-            const panel = document.getElementById('actionPanel'); 
-            const today = getTodayStr();
-            if (!appData[today]) initTodayData(); 
-            const session = appData[today][h];
+            const panel = document.getElementById('actionPanel'); const today = getTodayStr();
+            ensureDataStructure(); const session = appData[today][h];
 
-            if (h < START_HOUR || h > END_HOUR) { 
-                panel.classList.remove('active'); 
-                return; 
-            }
+            if (h < START_HOUR || h > END_HOUR) { panel.classList.remove('active'); return; }
 
             if (m >= 0 && m < 5) {
                 if (session.attendance === null) {
                     panel.classList.add('active'); 
-                    document.getElementById('mathSection').style.display = 'block'; 
-                    document.getElementById('setupSection').style.display = 'none';
-                    document.getElementById('actionTitle').innerText = 'Phase 1: Presence Verification';
-                    document.getElementById('countdownTimer').innerText = `0${4-m}:${(59-s).toString().padStart(2, '0')}`; 
-                    document.getElementById('countdownTimer').style.color = "var(--danger-text)";
+                    document.getElementById('mathSection').style.display = 'block'; document.getElementById('setupSection').style.display = 'none';
+                    document.getElementById('actionTitle').innerHTML = '<i class="fa-solid fa-fingerprint"></i> Phase 1: Presence Verification';
+                    document.getElementById('countdownTimer').innerText = `0${4-m}:${(59-s).toString().padStart(2, '0')}`; document.getElementById('countdownTimer').style.color = "var(--danger-text)";
                     if (lastGeneratedHour !== h) { generateMath(); lastGeneratedHour = h; }
-                } else { 
-                    panel.classList.remove('active'); 
-                }
+                } else { panel.classList.remove('active'); }
             } else if (m >= 5 && m < 10) {
                 if (session.attendance === true && session.setup === null) {
                     panel.classList.add('active'); 
-                    document.getElementById('mathSection').style.display = 'none'; 
-                    document.getElementById('setupSection').style.display = 'block';
-                    document.getElementById('actionTitle').innerText = 'Phase 2: Context Log';
-                    document.getElementById('countdownTimer').innerText = `0${9-m}:${(59-s).toString().padStart(2, '0')}`; 
-                    document.getElementById('countdownTimer').style.color = "var(--accent-primary)";
+                    document.getElementById('mathSection').style.display = 'none'; document.getElementById('setupSection').style.display = 'block';
+                    document.getElementById('actionTitle').innerHTML = '<i class="fa-solid fa-pen-to-square"></i> Phase 2: Execution Log';
+                    document.getElementById('countdownTimer').innerText = `0${9-m}:${(59-s).toString().padStart(2, '0')}`; document.getElementById('countdownTimer').style.color = "var(--accent-primary)";
                 } else if (session.attendance === null && !session.missed) { 
                     panel.classList.remove('active');
-                    
                     if(!isCheckingState) {
                         isCheckingState = true;
                         loadCloudData().then(() => {
                             let freshSession = appData[today][h];
                             if (freshSession.attendance === null && !freshSession.missed) {
-                                freshSession.attendance = false;
-                                freshSession.missed = true;
-                                saveCloudData();
+                                freshSession.attendance = false; freshSession.missed = true; saveCloudData();
                             }
                             setTimeout(() => isCheckingState = false, 3000);
                         });
                     }
-                } else { 
-                    panel.classList.remove('active'); 
-                }
+                } else { panel.classList.remove('active'); }
             } else {
                 panel.classList.remove('active');
                 let needsAutoClose = (session.attendance === true && session.setup === null && !session.missed);
                 let needsAutoFail = (session.attendance === null && !session.missed);
-
                 if (needsAutoClose || needsAutoFail) {
                     if(!isCheckingState) {
                         isCheckingState = true;
                         loadCloudData().then(() => {
-                            let freshSession = appData[today][h];
-                            let changed = false;
-                            
-                            if (freshSession.attendance === true && freshSession.setup === null && !freshSession.missed) {
-                                freshSession.setup = "[SYSTEM] Auto-closed.";
-                                changed = true;
-                            }
-                            if (freshSession.attendance === null && !freshSession.missed) {
-                                freshSession.attendance = false;
-                                freshSession.missed = true;
-                                changed = true;
-                            }
+                            let freshSession = appData[today][h]; let changed = false;
+                            if (freshSession.attendance === true && freshSession.setup === null && !freshSession.missed) { freshSession.setup = "[SYSTEM] Auto-closed."; changed = true; }
+                            if (freshSession.attendance === null && !freshSession.missed) { freshSession.attendance = false; freshSession.missed = true; changed = true; }
                             if(changed) saveCloudData();
                             setTimeout(() => isCheckingState = false, 3000);
                         });
@@ -1089,12 +1157,9 @@
         }
 
         function generateMath() {
-            const n1 = Math.floor(Math.random() * 50) + 10; 
-            const n2 = Math.floor(Math.random() * 50) + 10;
-            const op = ['+', '-'][Math.floor(Math.random() * 2)]; 
-            currentMathAns = op === '+' ? n1 + n2 : n1 - n2;
-            document.getElementById('mathProblem').innerText = `${n1} ${op} ${n2}`; 
-            document.getElementById('mathAnswer').value = '';
+            const n1 = Math.floor(Math.random() * 50) + 10; const n2 = Math.floor(Math.random() * 50) + 10;
+            const op = ['+', '-'][Math.floor(Math.random() * 2)]; currentMathAns = op === '+' ? n1 + n2 : n1 - n2;
+            document.getElementById('mathProblem').innerText = `${n1} ${op} ${n2}`; document.getElementById('mathAnswer').value = '';
         }
 
         checkSession();
