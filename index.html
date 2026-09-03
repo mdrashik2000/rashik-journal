@@ -654,7 +654,7 @@
             return !cloudErrorMsg; // true if success
         }
 
-        // --- 🟢 NEW: Daily Notes Logic ---
+        // --- 🟢 UPDATED: Daily Notes Logic ---
         function loadNotesUI() {
             const picker = document.getElementById('noteDatePicker');
             if(!picker.value) picker.value = getTodayStr();
@@ -703,7 +703,7 @@
             });
         }
 
-        function createNewNote() {
+        async function createNewNote() {
             const now = new Date();
             const ampm = now.getHours() >= 12 ? 'PM' : 'AM'; 
             let hour = now.getHours() % 12; hour = hour ? hour : 12;
@@ -722,6 +722,9 @@
             openNote(newNote.id);
             refreshNotesListOnly();
             document.getElementById('noteTitleInput').focus();
+
+            // 🟢 NEW FIX: Save immediately to cloud to prevent overwrite bug
+            await saveCloudData(false);
         }
 
         function openNote(id) {
@@ -762,19 +765,10 @@
             statusEl.style.color = 'var(--text-muted)';
             statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Syncing...`;
             
-            // 1. Fetch latest to prevent overwrite
-            await loadCloudData();
+            // 1. Save local changes first
+            autoSaveNoteLocally();
             
-            // 2. Re-apply local changes to the memory object
-            const title = document.getElementById('noteTitleInput').value;
-            const content = document.getElementById('noteBodyInput').value;
-            const noteIndex = appData[currentNoteDateStr].notes.findIndex(n => n.id === activeNoteId);
-            if(noteIndex !== -1) {
-                appData[currentNoteDateStr].notes[noteIndex].title = title;
-                appData[currentNoteDateStr].notes[noteIndex].content = content;
-            }
-            
-            // 3. Push
+            // 2. Push directly to cloud without downloading old data (FIXED BUG)
             const success = await saveCloudData(false);
             
             if(success) {
