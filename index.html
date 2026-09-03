@@ -42,13 +42,14 @@
         
         /* Auth Screen */
         #authScreen { position: fixed; inset: 0; background: var(--bg-base); display: flex; justify-content: center; align-items: center; z-index: 1000; }
-        .auth-card { background: var(--bg-surface); padding: 40px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); width: 100%; max-width: 400px; box-shadow: 0 4px 30px rgba(0,0,0,0.5); text-align: center; }
+        .auth-card { background: var(--bg-surface); padding: 40px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); width: 100%; max-width: 400px; box-shadow: 0 4px 30px rgba(0,0,0,0.5); text-align: center; display: none; }
+        .auth-card.active { display: block; animation: fadeIn 0.3s ease; }
         .auth-card h2 { margin-bottom: 24px; font-size: 24px; color: var(--text-main); }
         .auth-input { width: 100%; padding: 12px 16px; margin-bottom: 16px; background: var(--bg-base); border: 1px solid var(--border-color); color: var(--text-main); border-radius: var(--radius-md); outline: none; }
         .auth-input:focus { border-color: var(--accent-primary); }
         
-        .btn-google { background: #ffffff; color: #000000; font-weight: 600; width: 100%; padding: 12px; border-radius: var(--radius-md); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 10px; transition: 0.2s; }
-        .btn-google:hover { background: #f1f1f1; }
+        .auth-link { color: var(--accent-primary); cursor: pointer; font-weight: 600; }
+        .auth-link:hover { text-decoration: underline; }
 
         /* App Layout */
         #appContainer { display: none; width: 100%; height: 100%; }
@@ -136,21 +137,32 @@
 
     <!-- AUTH SCREEN -->
     <div id="authScreen">
-        <div class="auth-card">
+        <!-- LOGIN VIEW -->
+        <div class="auth-card active" id="loginCard">
             <h2><i class="fa-solid fa-layer-group" style="color: var(--accent-primary);"></i> Rashik Analytics</h2>
             <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 13px;">Secure Cloud Terminal Login</p>
-            <input type="email" id="authEmail" class="auth-input" placeholder="Email Address">
-            <input type="password" id="authPassword" class="auth-input" placeholder="Password">
-            <button class="btn btn-primary" onclick="handleLogin()" style="margin-bottom: 8px; padding: 12px;">Sign In</button>
-            <button class="btn btn-outline" onclick="handleSignUp()" style="margin-bottom: 12px; padding: 12px;">Create Account</button>
             
-            <div style="border-top: 1px solid var(--border-color); margin: 15px 0; padding-top: 15px;">
-                <button class="btn-google" onclick="handleGoogleLogin()">
-                    <i class="fa-brands fa-google" style="color: #ea4335;"></i> Continue with Google
-                </button>
-            </div>
+            <input type="email" id="loginEmail" class="auth-input" placeholder="Email Address">
+            <input type="password" id="loginPassword" class="auth-input" placeholder="Password">
+            <button class="btn btn-primary" onclick="handleLogin()" style="margin-bottom: 12px; padding: 12px;">Sign In</button>
             
-            <p id="authMessage" style="color: var(--danger-text); margin-top: 15px; font-size: 12px; display: none;"></p>
+            <p style="font-size: 13px; color: var(--text-muted);">Don't have an account? <span class="auth-link" onclick="toggleAuth('signup')">Create one</span></p>
+            
+            <p id="loginMessage" style="color: var(--danger-text); margin-top: 15px; font-size: 12px; display: none;"></p>
+        </div>
+
+        <!-- SIGNUP VIEW -->
+        <div class="auth-card" id="signupCard">
+            <h2><i class="fa-solid fa-user-plus" style="color: var(--accent-primary);"></i> Create Account</h2>
+            <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 13px;">Join the Analytics Terminal</p>
+            
+            <input type="email" id="signupEmail" class="auth-input" placeholder="Email Address">
+            <input type="password" id="signupPassword" class="auth-input" placeholder="Password (Min 6 chars)">
+            <button class="btn btn-primary" onclick="handleSignUp()" style="margin-bottom: 12px; padding: 12px;">Sign Up</button>
+            
+            <p style="font-size: 13px; color: var(--text-muted);">Already have an account? <span class="auth-link" onclick="toggleAuth('login')">Sign in here</span></p>
+            
+            <p id="signupMessage" style="color: var(--danger-text); margin-top: 15px; font-size: 12px; display: none;"></p>
         </div>
     </div>
 
@@ -162,16 +174,16 @@
             </div>
             
             <div class="nav-menu">
-                <div class="nav-item active" onclick="switchTab('dashboard')"><i class="fa-solid fa-border-all"></i> Dashboard</div>
-                <div class="nav-item" onclick="switchTab('history')"><i class="fa-solid fa-clock-rotate-left"></i> Daily History</div>
-                <div class="nav-item" onclick="switchTab('analytics'); loadAdvancedAnalytics();"><i class="fa-solid fa-chart-pie"></i> Analytics & Trends</div>
+                <div class="nav-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-border-all"></i> Dashboard</div>
+                <div class="nav-item" onclick="switchTab('history', this)"><i class="fa-solid fa-clock-rotate-left"></i> Daily History</div>
+                <div class="nav-item" onclick="switchTab('analytics', this); loadAdvancedAnalytics();"><i class="fa-solid fa-chart-pie"></i> Analytics & Trends</div>
             </div>
             
             <div class="sys-controls">
                 <div class="theme-selector">
-                    <button class="theme-btn active" onclick="setTheme('dark')">Dark</button>
-                    <button class="theme-btn" onclick="setTheme('dim')">Dim</button>
-                    <button class="theme-btn" onclick="setTheme('light')">Light</button>
+                    <button class="theme-btn active" onclick="setTheme('dark', this)">Dark</button>
+                    <button class="theme-btn" onclick="setTheme('dim', this)">Dim</button>
+                    <button class="theme-btn" onclick="setTheme('light', this)">Light</button>
                 </div>
                 <button class="btn btn-outline" onclick="handleLogout()"><i class="fa-solid fa-right-from-bracket"></i> Sign Out</button>
             </div>
@@ -348,19 +360,49 @@
     <script>
         const supabaseUrl = 'https://itykyoxzodjcvncaigtn.supabase.co';
         const supabaseKey = 'sb_publishable_PuJZxMVmRKSG2-scXim2Ew_mCacpPLE';
-        const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         let currentUser = null;
         let appData = {};
         
-        const START_HOUR = 8; const END_HOUR = 23; 
-        let currentMathAns = null; let lastGeneratedHour = -1;
+        const START_HOUR = 8; 
+        const END_HOUR = 23; 
+        let currentMathAns = null; 
+        let lastGeneratedHour = -1;
         let audioEnabled = false;
-        let trendChartInst = null; let reasonChartInst = null;
+        let trendChartInst = null; 
+        let reasonChartInst = null;
+
+        // Toggle Login & Signup view
+        function toggleAuth(view) {
+            document.getElementById('loginCard').classList.remove('active');
+            document.getElementById('signupCard').classList.remove('active');
+            
+            if(view === 'login') {
+                document.getElementById('loginCard').classList.add('active');
+            } else {
+                document.getElementById('signupCard').classList.add('active');
+            }
+        }
 
         async function checkSession() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            handleAuthChange(session);
+        }
+
+        supabaseClient.auth.onAuthStateChange(async (event, session) => {
             if (session) {
+                handleAuthChange(session);
+            } else if (event === 'SIGNED_OUT') {
+                currentUser = null;
+                appData = {};
+                document.getElementById('authScreen').style.display = 'flex';
+                document.getElementById('appContainer').style.display = 'none';
+            }
+        });
+
+        async function handleAuthChange(session) {
+            if (session && session.user) {
                 currentUser = session.user;
                 document.getElementById('authScreen').style.display = 'none';
                 document.getElementById('appContainer').style.display = 'flex';
@@ -369,76 +411,128 @@
             } else {
                 document.getElementById('authScreen').style.display = 'flex';
                 document.getElementById('appContainer').style.display = 'none';
+                toggleAuth('login'); // Default to login view
             }
         }
 
         async function handleSignUp() {
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            const msgEl = document.getElementById('authMessage');
-            if(!email || password.length < 6) { msgEl.innerText = "Provide a valid email and a 6+ char password."; msgEl.style.display = 'block'; return; }
-            const { error } = await supabase.auth.signUp({ email, password });
-            if (error) { msgEl.innerText = error.message; msgEl.style.display = 'block'; }
-            else { msgEl.innerText = "Sign up successful! You can now log in."; msgEl.style.color = "var(--success-text)"; msgEl.style.display = 'block'; }
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const msgEl = document.getElementById('signupMessage');
+            
+            if(!email || password.length < 6) { 
+                msgEl.innerText = "Please provide a valid email and a 6+ char password."; 
+                msgEl.style.color = "var(--danger-text)";
+                msgEl.style.display = 'block'; 
+                return; 
+            }
+            
+            const { error } = await supabaseClient.auth.signUp({ email, password });
+            if (error) { 
+                msgEl.innerText = error.message; 
+                msgEl.style.color = "var(--danger-text)";
+                msgEl.style.display = 'block'; 
+            } else { 
+                msgEl.innerText = "Account created successfully! You can now log in."; 
+                msgEl.style.color = "var(--success-text)"; 
+                msgEl.style.display = 'block'; 
+                setTimeout(() => { toggleAuth('login'); }, 2000);
+            }
         }
 
         async function handleLogin() {
-            const email = document.getElementById('authEmail').value;
-            const password = document.getElementById('authPassword').value;
-            const msgEl = document.getElementById('authMessage');
-            const { error } = await supabase.auth.signInWithPassword({ email, password });
-            if (error) { msgEl.innerText = error.message; msgEl.style.color = "var(--danger-text)"; msgEl.style.display = 'block'; }
-            else { checkSession(); }
-        }
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const msgEl = document.getElementById('loginMessage');
+            
+            if(!email || !password) {
+                msgEl.innerText = "Please enter both email and password.";
+                msgEl.style.color = "var(--danger-text)";
+                msgEl.style.display = 'block';
+                return;
+            }
 
-        // Google Login Trigger
-        async function handleGoogleLogin() {
-            const { error } = await supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: { redirectTo: window.location.origin }
-            });
-            if (error) {
-                const msgEl = document.getElementById('authMessage');
-                msgEl.innerText = error.message; msgEl.style.display = 'block';
+            const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error) { 
+                msgEl.innerText = error.message; 
+                msgEl.style.color = "var(--danger-text)"; 
+                msgEl.style.display = 'block'; 
+            } else { 
+                msgEl.style.display = 'none';
+                checkSession(); 
             }
         }
 
         async function handleLogout() {
-            await supabase.auth.signOut();
-            currentUser = null; appData = {};
-            checkSession();
+            await supabaseClient.auth.signOut();
+            currentUser = null; 
+            appData = {};
+            document.getElementById('authScreen').style.display = 'flex';
+            document.getElementById('appContainer').style.display = 'none';
         }
 
         async function loadCloudData() {
-            const { data } = await supabase.from('journal_data').select('app_data').eq('user_id', currentUser.id).single();
-            if (data && data.app_data) { appData = data.app_data; } 
-            else { appData = {}; }
+            if (!currentUser) return;
+            const { data, error } = await supabaseClient
+                .from('journal_data')
+                .select('app_data')
+                .eq('user_id', currentUser.id)
+                .single();
+                
+            if (data && data.app_data) { 
+                appData = data.app_data; 
+            } else { 
+                appData = {}; 
+            }
         }
 
         async function saveCloudData(render = true) {
             if (!currentUser) return;
-            await supabase.from('journal_data').upsert({ user_id: currentUser.id, app_data: appData });
+            await supabaseClient.from('journal_data').upsert({ 
+                user_id: currentUser.id, 
+                app_data: appData 
+            });
+            
             if(render) {
-                if(document.getElementById('dashboard').classList.contains('active')) { renderMatrix(); updateStats(); analyzeWeakness(); }
-                if(document.getElementById('analytics').classList.contains('active')) { loadAdvancedAnalytics(); }
+                if(document.getElementById('dashboard').classList.contains('active')) { 
+                    renderMatrix(); 
+                    updateStats(); 
+                    analyzeWeakness(); 
+                }
+                if(document.getElementById('analytics').classList.contains('active')) { 
+                    loadAdvancedAnalytics(); 
+                }
             }
         }
 
         function initApp() {
-            initTodayData(); renderMatrix(); updateStats(); analyzeWeakness(); setInterval(tick, 1000); tick();
+            initTodayData(); 
+            renderMatrix(); 
+            updateStats(); 
+            analyzeWeakness(); 
+            setInterval(tick, 1000); 
+            tick();
         }
 
         function toggleAudio() {
             audioEnabled = !audioEnabled;
             const btn = document.getElementById('audioToggleBtn');
             if(audioEnabled) {
-                btn.classList.add('active'); btn.innerHTML = '<i class="fa-solid fa-bell"></i> Alerts Active';
-                document.getElementById('candleAlert').play().then(()=>{ document.getElementById('candleAlert').pause(); document.getElementById('candleAlert').currentTime = 0; }).catch(e=>{});
-            } else { btn.classList.remove('active'); btn.innerHTML = '<i class="fa-solid fa-bell-slash"></i> Enable Audio Alerts'; }
+                btn.classList.add('active'); 
+                btn.innerHTML = '<i class="fa-solid fa-bell"></i> Alerts Active';
+                document.getElementById('candleAlert').play().then(()=>{ 
+                    document.getElementById('candleAlert').pause(); 
+                    document.getElementById('candleAlert').currentTime = 0; 
+                }).catch(e=>{});
+            } else { 
+                btn.classList.remove('active'); 
+                btn.innerHTML = '<i class="fa-solid fa-bell-slash"></i> Enable Audio Alerts'; 
+            }
         }
 
         function getTodayStr() { 
-            const now = new Date(); const offset = now.getTimezoneOffset() * 60000;
+            const now = new Date(); 
+            const offset = now.getTimezoneOffset() * 60000;
             return (new Date(now - offset)).toISOString().split('T')[0]; 
         }
 
@@ -446,38 +540,59 @@
             const today = getTodayStr();
             if (!appData[today]) {
                 appData[today] = {};
-                for (let h = START_HOUR; h <= END_HOUR; h++) { appData[today][h] = { attendance: null, setup: null, pair: "NONE", reason: "", missed: false, execAttTime: null, execSetupTime: null }; }
+                for (let h = START_HOUR; h <= END_HOUR; h++) { 
+                    appData[today][h] = { 
+                        attendance: null, 
+                        setup: null, 
+                        pair: "NONE", 
+                        reason: "", 
+                        missed: false, 
+                        execAttTime: null, 
+                        execSetupTime: null 
+                    }; 
+                }
                 saveCloudData(false);
             }
         }
 
-        function setTheme(theme) {
-            document.body.setAttribute('data-theme', theme); localStorage.setItem('rashik_theme', theme);
-            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active')); event.target.classList.add('active');
+        function setTheme(theme, btnEl) {
+            document.body.setAttribute('data-theme', theme); 
+            localStorage.setItem('rashik_theme', theme);
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active')); 
+            if(btnEl) btnEl.classList.add('active');
             if(trendChartInst) loadAdvancedAnalytics();
         }
         
-        const savedTheme = localStorage.getItem('rashik_theme') || 'dark'; document.body.setAttribute('data-theme', savedTheme);
-        document.querySelectorAll('.theme-btn').forEach(btn => { if(btn.innerText.toLowerCase() === savedTheme) btn.classList.add('active'); });
+        const savedTheme = localStorage.getItem('rashik_theme') || 'dark'; 
+        document.body.setAttribute('data-theme', savedTheme);
+        document.querySelectorAll('.theme-btn').forEach(btn => { 
+            if(btn.innerText.toLowerCase() === savedTheme) btn.classList.add('active'); 
+        });
 
-        function switchTab(tabId) {
+        function switchTab(tabId, tabEl) {
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active'); event.currentTarget.classList.add('active');
+            document.getElementById(tabId).classList.add('active'); 
+            if(tabEl) tabEl.classList.add('active');
+            
             if(tabId === 'dashboard') { renderMatrix(); updateStats(); analyzeWeakness(); }
             if(tabId === 'history') { document.getElementById('historyDate').value = getTodayStr(); loadHistory(); }
             if(tabId === 'analytics') { loadAdvancedAnalytics(); }
         }
 
         function formatHour(h) {
-            const ampm = h >= 12 ? 'PM' : 'AM'; let hour = h % 12; hour = hour ? hour : 12;
+            const ampm = h >= 12 ? 'PM' : 'AM'; 
+            let hour = h % 12; 
+            hour = hour ? hour : 12;
             return `${hour.toString().padStart(2, '0')}:00 ${ampm}`;
         }
 
         function generateRowHTML(h, session, isFutureHour, isCurrentHour, isPastDate) {
             let attStatus, finalStatus, cellContent = '';
             if (isFutureHour) {
-                attStatus = '<span style="color:var(--text-muted);">Upcoming</span>'; finalStatus = '<span style="color:var(--text-muted);">Pending</span>'; cellContent = '<span style="opacity: 0.3;">Awaiting time...</span>';
+                attStatus = '<span style="color:var(--text-muted);">Upcoming</span>'; 
+                finalStatus = '<span style="color:var(--text-muted);">Pending</span>'; 
+                cellContent = '<span style="opacity: 0.3;">Awaiting time...</span>';
             } else {
                 let isMissedAtt = session.attendance === false || session.missed === true || (session.attendance === null && (isPastDate || h < new Date().getHours()));
                 if (session.attendance === true) attStatus = '<span style="color:var(--success-text);"><i class="fa-solid fa-check"></i> Present</span>';
@@ -504,18 +619,28 @@
         }
 
         function renderMatrix() {
-            initTodayData(); const today = getTodayStr(); const data = appData[today]; const tbody = document.getElementById('matrixBody'); const currentHour = new Date().getHours();
+            initTodayData(); 
+            const today = getTodayStr(); 
+            const data = appData[today]; 
+            const tbody = document.getElementById('matrixBody'); 
+            const currentHour = new Date().getHours();
+            
             document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
             tbody.innerHTML = '';
             for (let h = START_HOUR; h <= END_HOUR; h++) {
-                const tr = document.createElement('tr'); if (h === currentHour) tr.classList.add('active-hour');
-                tr.innerHTML = generateRowHTML(h, data[h], (h > currentHour), h === currentHour, false); tbody.appendChild(tr);
+                const tr = document.createElement('tr'); 
+                if (h === currentHour) tr.classList.add('active-hour');
+                tr.innerHTML = generateRowHTML(h, data[h], (h > currentHour), h === currentHour, false); 
+                tbody.appendChild(tr);
             }
         }
 
         function updateStats() {
-            const today = getTodayStr(); const data = appData[today]; let completed = 0, setups = 0, missed = 0, totalAttTime = 0, validAttCount = 0;
-            const total = (END_HOUR - START_HOUR) + 1; const currentHour = new Date().getHours();
+            const today = getTodayStr(); 
+            const data = appData[today]; 
+            let completed = 0, setups = 0, missed = 0, totalAttTime = 0, validAttCount = 0;
+            const total = (END_HOUR - START_HOUR) + 1; 
+            const currentHour = new Date().getHours();
 
             for (let h = START_HOUR; h <= END_HOUR; h++) {
                 if (data[h].attendance === true && data[h].setup !== null) completed++;
@@ -523,15 +648,21 @@
                 if (data[h].reason === "Executed") setups++;
                 if (data[h].execAttTime) { totalAttTime += data[h].execAttTime; validAttCount++; }
             }
-            let elapsed = currentHour >= START_HOUR ? Math.min(currentHour - START_HOUR + 1, total) : 0; if (currentHour > END_HOUR) elapsed = total;
-            let score = elapsed > 0 ? Math.round((completed / elapsed) * 100) : 0; let avgTime = validAttCount > 0 ? Math.round(totalAttTime / validAttCount) : 0;
+            let elapsed = currentHour >= START_HOUR ? Math.min(currentHour - START_HOUR + 1, total) : 0; 
+            if (currentHour > END_HOUR) elapsed = total;
+            let score = elapsed > 0 ? Math.round((completed / elapsed) * 100) : 0; 
+            let avgTime = validAttCount > 0 ? Math.round(totalAttTime / validAttCount) : 0;
 
-            document.getElementById('statScore').innerText = `${score}%`; document.getElementById('statMissed').innerText = missed;
-            document.getElementById('statSetups').innerText = setups; document.getElementById('statExecTime').innerText = avgTime > 0 ? `${avgTime}s` : '0s';
+            document.getElementById('statScore').innerText = `${score}%`; 
+            document.getElementById('statMissed').innerText = missed;
+            document.getElementById('statSetups').innerText = setups; 
+            document.getElementById('statExecTime').innerText = avgTime > 0 ? `${avgTime}s` : '0s';
         }
 
         function analyzeWeakness() {
-            const today = getTodayStr(); const data = appData[today]; let lazyCount = 0, missedCount = 0, totalAttTime = 0, attCount = 0, confCount = 0;
+            const today = getTodayStr(); 
+            const data = appData[today]; 
+            let lazyCount = 0, missedCount = 0, totalAttTime = 0, attCount = 0, confCount = 0;
             const currentHour = new Date().getHours();
 
             for (let h = START_HOUR; h <= END_HOUR; h++) {
@@ -540,33 +671,55 @@
                 if (data[h].reason === "No Confidence" || data[h].reason === "Confusing") confCount++;
                 if (data[h].execAttTime) { totalAttTime += data[h].execAttTime; attCount++; }
             }
-            let avgAttTime = attCount > 0 ? Math.round(totalAttTime / attCount) : 0; let msg = "", tag = "";
+            let avgAttTime = attCount > 0 ? Math.round(totalAttTime / attCount) : 0; 
+            let msg = "", tag = "";
 
             if (missedCount === 0 && attCount > 0 && lazyCount === 0) {
-                msg = "Your discipline is rock solid today. Maintaining this consistency will ensure your success in the prop firm. [Inference]"; tag = "Solid Discipline";
+                msg = "Your discipline is rock solid today. Maintaining this consistency will ensure your success in the prop firm."; 
+                tag = "Solid Discipline";
             } else if (lazyCount >= 2) {
-                msg = "You are skipping sessions due to laziness. Remember, prop firm funds are real money. This behavior will wash you out of the market. [Inference]"; tag = "Weakness: Laziness";
+                msg = "You are skipping sessions due to laziness. Remember, prop firm funds are real money. This behavior will wash you out of the market."; 
+                tag = "Weakness: Laziness";
             } else if (missedCount >= 3) {
-                msg = "You have missed multiple sessions. Trading is a business; without punctuality, long-term profitability is impossible. [Inference]"; tag = "Weakness: Poor Consistency";
+                msg = "You have missed multiple sessions. Trading is a business; without punctuality, long-term profitability is impossible."; 
+                tag = "Weakness: Poor Consistency";
             } else if (confCount >= 2) {
-                msg = "You are hesitating due to a lack of confidence or confusion. You need to put more effort into your strategy and backtesting. [Inference]"; tag = "Weakness: Lack of Confidence";
+                msg = "You are hesitating due to a lack of confidence or confusion. You need to put more effort into your strategy and backtesting."; 
+                tag = "Weakness: Lack of Confidence";
             } else if (avgAttTime > 180) {
-                msg = "Your execution time (averaging over 3 mins) is too slow. In the futures market, this hesitation will cause you to miss prime entries. [Inference]"; tag = "Weakness: Slow Execution";
-            } else { msg = "Insufficient data or average performance today. Keep your focus sharp."; tag = "Analyzing..."; }
+                msg = "Your execution time (averaging over 3 mins) is too slow. In the futures market, this hesitation will cause you to miss prime entries."; 
+                tag = "Weakness: Slow Execution";
+            } else { 
+                msg = "Insufficient data or average performance today. Keep your focus sharp."; 
+                tag = "Analyzing..."; 
+            }
 
-            document.getElementById('realityText').innerText = msg; document.getElementById('weaknessBadgeContainer').innerHTML = `<span class="weakness-tag">${tag}</span>`;
+            document.getElementById('realityText').innerText = msg; 
+            document.getElementById('weaknessBadgeContainer').innerHTML = `<span class="weakness-tag">${tag}</span>`;
         }
 
         function loadHistory() {
-            const dateStr = document.getElementById('historyDate').value; const data = appData[dateStr]; const tbody = document.getElementById('historyBody');
-            const todayStr = getTodayStr(); const currentHour = new Date().getHours();
-            document.getElementById('historyTitle').innerText = `Matrix Data: ${dateStr}`; tbody.innerHTML = '';
+            const dateStr = document.getElementById('historyDate').value; 
+            const data = appData[dateStr]; 
+            const tbody = document.getElementById('historyBody');
+            const todayStr = getTodayStr(); 
+            const currentHour = new Date().getHours();
             
-            const isFutureDate = dateStr > todayStr; const isPastDate = dateStr < todayStr; const isToday = dateStr === todayStr;
-            if(!data && !isFutureDate) { tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted);">No records found.</td></tr>`; return; }
+            document.getElementById('historyTitle').innerText = `Matrix Data: ${dateStr}`; 
+            tbody.innerHTML = '';
+            
+            const isFutureDate = dateStr > todayStr; 
+            const isPastDate = dateStr < todayStr; 
+            const isToday = dateStr === todayStr;
+            
+            if(!data && !isFutureDate) { 
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; padding: 40px; color: var(--text-muted);">No records found.</td></tr>`; 
+                return; 
+            }
             
             for (let h = START_HOUR; h <= END_HOUR; h++) {
-                const tr = document.createElement('tr'); let session = data ? data[h] : { attendance: null, setup: null, pair: "NONE", reason: "", missed: false };
+                const tr = document.createElement('tr'); 
+                let session = data ? data[h] : { attendance: null, setup: null, pair: "NONE", reason: "", missed: false };
                 if(!session) session = { attendance: null, setup: null, pair: "NONE", reason: "", missed: false };
                 tr.innerHTML = generateRowHTML(h, session, isFutureDate || (isToday && h > currentHour), isToday && h === currentHour, isPastDate);
                 tbody.appendChild(tr);
@@ -576,103 +729,219 @@
         function getPeriodScore(datesArray) {
             let completed = 0, totalEligible = 0;
             datesArray.forEach(d => {
-                if(appData[d]) { for(let h=START_HOUR; h<=END_HOUR; h++) { totalEligible++; if(appData[d][h].attendance && appData[d][h].setup) completed++; } }
+                if(appData[d]) { 
+                    for(let h=START_HOUR; h<=END_HOUR; h++) { 
+                        totalEligible++; 
+                        if(appData[d][h].attendance && appData[d][h].setup) completed++; 
+                    } 
+                }
             });
             return totalEligible > 0 ? Math.round((completed / totalEligible) * 100) : 0;
         }
 
         function loadAdvancedAnalytics() {
             const allDates = Object.keys(appData).sort();
-            const last7Days = []; for(let i=0; i<7; i++) { let d = new Date(); d.setDate(d.getDate() - i); let offset = d.getTimezoneOffset() * 60000; last7Days.push(new Date(d - offset).toISOString().split('T')[0]); }
+            const last7Days = []; 
+            for(let i=0; i<7; i++) { 
+                let d = new Date(); 
+                d.setDate(d.getDate() - i); 
+                let offset = d.getTimezoneOffset() * 60000; 
+                last7Days.push(new Date(d - offset).toISOString().split('T')[0]); 
+            }
             
-            let currentMonthPrefix = getTodayStr().slice(0, 7); let monthDates = allDates.filter(d => d.startsWith(currentMonthPrefix));
+            let currentMonthPrefix = getTodayStr().slice(0, 7); 
+            let monthDates = allDates.filter(d => d.startsWith(currentMonthPrefix));
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
             document.getElementById('monthLabel').innerText = `${monthNames[parseInt(currentMonthPrefix.split('-')[1]) - 1]} Discipline`;
 
-            let reasonCount = {}; let totalSetups = 0;
+            let reasonCount = {}; 
+            let totalSetups = 0;
             allDates.forEach(d => {
                 for(let h=START_HOUR; h<=END_HOUR; h++) {
-                    if(appData[d][h] && appData[d][h].attendance) {
-                        let r = appData[d][h].reason; if(r === "Executed") totalSetups++;
+                    if(appData[d] && appData[d][h] && appData[d][h].attendance) {
+                        let r = appData[d][h].reason; 
+                        if(r === "Executed") totalSetups++;
                         if(r && r !== "Executed" && r !== "") reasonCount[r] = (reasonCount[r] || 0) + 1;
                     }
                 }
             });
 
-            document.getElementById('kpiWeekScore').innerText = `${getPeriodScore(last7Days)}%`; document.getElementById('kpiMonthScore').innerText = `${getPeriodScore(monthDates)}%`;
-            document.getElementById('kpiTotalSetups').innerText = totalSetups; document.getElementById('kpiTopReason').innerText = Object.keys(reasonCount).sort((a,b)=>reasonCount[b]-reasonCount[a])[0] || "None Recorded";
+            document.getElementById('kpiWeekScore').innerText = `${getPeriodScore(last7Days)}%`; 
+            document.getElementById('kpiMonthScore').innerText = `${getPeriodScore(monthDates)}%`;
+            document.getElementById('kpiTotalSetups').innerText = totalSetups; 
+            document.getElementById('kpiTopReason').innerText = Object.keys(reasonCount).sort((a,b)=>reasonCount[b]-reasonCount[a])[0] || "None Recorded";
 
-            const last14Dates = []; for(let i=13; i>=0; i--) { let d = new Date(); d.setDate(d.getDate() - i); let offset = d.getTimezoneOffset() * 60000; last14Dates.push(new Date(d - offset).toISOString().split('T')[0]); }
+            const last14Dates = []; 
+            for(let i=13; i>=0; i--) { 
+                let d = new Date(); 
+                d.setDate(d.getDate() - i); 
+                let offset = d.getTimezoneOffset() * 60000; 
+                last14Dates.push(new Date(d - offset).toISOString().split('T')[0]); 
+            }
             let scores14d = last14Dates.map(d => getPeriodScore([d]));
 
-            Chart.defaults.color = '#a1a1aa'; Chart.defaults.font.family = 'Inter';
+            Chart.defaults.color = '#a1a1aa'; 
+            Chart.defaults.font.family = 'Inter';
             if(trendChartInst) trendChartInst.destroy();
             const ctx1 = document.getElementById('trendChart').getContext('2d');
-            let gradient = ctx1.createLinearGradient(0, 0, 0, 400); gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
-            trendChartInst = new Chart(ctx1, { type: 'line', data: { labels: last14Dates.map(d=>d.slice(5)), datasets: [{ label: 'Score (%)', data: scores14d, borderColor: '#3b82f6', backgroundColor: gradient, fill: true, tension: 0.4, pointBackgroundColor: '#18181b', pointBorderColor: '#3b82f6' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, max: 100, grid: { color: '#27272a' } }, x: { grid: { display: false } } }, plugins: { legend: { display: false } } } });
+            let gradient = ctx1.createLinearGradient(0, 0, 0, 400); 
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); 
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0)');
+            
+            trendChartInst = new Chart(ctx1, { 
+                type: 'line', 
+                data: { 
+                    labels: last14Dates.map(d=>d.slice(5)), 
+                    datasets: [{ 
+                        label: 'Score (%)', 
+                        data: scores14d, 
+                        borderColor: '#3b82f6', 
+                        backgroundColor: gradient, 
+                        fill: true, 
+                        tension: 0.4, 
+                        pointBackgroundColor: '#18181b', 
+                        pointBorderColor: '#3b82f6' 
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    scales: { 
+                        y: { beginAtZero: true, max: 100, grid: { color: '#27272a' } }, 
+                        x: { grid: { display: false } } 
+                    }, 
+                    plugins: { legend: { display: false } } 
+                } 
+            });
 
             if(reasonChartInst) reasonChartInst.destroy();
             const ctx2 = document.getElementById('reasonChart').getContext('2d');
-            reasonChartInst = new Chart(ctx2, { type: 'doughnut', data: { labels: Object.keys(reasonCount), datasets: [{ data: Object.values(reasonCount), backgroundColor: ['#f59e0b', '#ef4444', '#10b981', '#8b5cf6', '#64748b', '#3b82f6'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'right', labels: { boxWidth: 12, usePointStyle: true } } } } });
+            reasonChartInst = new Chart(ctx2, { 
+                type: 'doughnut', 
+                data: { 
+                    labels: Object.keys(reasonCount), 
+                    datasets: [{ 
+                        data: Object.values(reasonCount), 
+                        backgroundColor: ['#f59e0b', '#ef4444', '#10b981', '#8b5cf6', '#64748b', '#3b82f6'], 
+                        borderWidth: 0 
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    cutout: '75%', 
+                    plugins: { 
+                        legend: { position: 'right', labels: { boxWidth: 12, usePointStyle: true } } 
+                    } 
+                } 
+            });
         }
 
         let lastPlayedHour = -1;
         function tick() {
-            const now = new Date(); const h = now.getHours(); const m = now.getMinutes(); const s = now.getSeconds();
-            const ampm = h >= 12 ? 'PM' : 'AM'; let displayH = h % 12; displayH = displayH ? displayH : 12;
+            const now = new Date(); 
+            const h = now.getHours(); 
+            const m = now.getMinutes(); 
+            const s = now.getSeconds();
+            const ampm = h >= 12 ? 'PM' : 'AM'; 
+            let displayH = h % 12; 
+            displayH = displayH ? displayH : 12;
+            
             document.getElementById('clockText').innerText = `${displayH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} ${ampm}`;
             
-            if (h >= START_HOUR && h <= END_HOUR && m === 0 && s === 0 && audioEnabled && lastPlayedHour !== h) { document.getElementById('candleAlert').play().catch(e=>{}); lastPlayedHour = h; }
+            if (h >= START_HOUR && h <= END_HOUR && m === 0 && s === 0 && audioEnabled && lastPlayedHour !== h) { 
+                document.getElementById('candleAlert').play().catch(e=>{}); 
+                lastPlayedHour = h; 
+            }
             document.getElementById('greetingText').innerText = `${h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : "Good Evening"}, Rashik`;
             processRules(h, m, s);
         }
 
         function processRules(h, m, s) {
             if(!document.getElementById('dashboard').classList.contains('active')) return;
-            const panel = document.getElementById('actionPanel'); const today = getTodayStr();
-            if (!appData[today]) initTodayData(); const session = appData[today][h];
+            const panel = document.getElementById('actionPanel'); 
+            const today = getTodayStr();
+            if (!appData[today]) initTodayData(); 
+            const session = appData[today][h];
 
-            if (h < START_HOUR || h > END_HOUR) { panel.classList.remove('active'); return; }
+            if (h < START_HOUR || h > END_HOUR) { 
+                panel.classList.remove('active'); 
+                return; 
+            }
 
             if (m >= 0 && m < 5) {
                 if (session.attendance === null) {
-                    panel.classList.add('active'); document.getElementById('mathSection').style.display = 'block'; document.getElementById('setupSection').style.display = 'none';
+                    panel.classList.add('active'); 
+                    document.getElementById('mathSection').style.display = 'block'; 
+                    document.getElementById('setupSection').style.display = 'none';
                     document.getElementById('actionTitle').innerText = 'Phase 1: Presence Verification';
-                    document.getElementById('countdownTimer').innerText = `0${4-m}:${(59-s).toString().padStart(2, '0')}`; document.getElementById('countdownTimer').style.color = "var(--danger-text)";
+                    document.getElementById('countdownTimer').innerText = `0${4-m}:${(59-s).toString().padStart(2, '0')}`; 
+                    document.getElementById('countdownTimer').style.color = "var(--danger-text)";
                     if (lastGeneratedHour !== h) { generateMath(); lastGeneratedHour = h; }
-                } else { panel.classList.remove('active'); }
+                } else { 
+                    panel.classList.remove('active'); 
+                }
             } else if (m >= 5 && m < 10) {
                 if (session.attendance === true && session.setup === null) {
-                    panel.classList.add('active'); document.getElementById('mathSection').style.display = 'none'; document.getElementById('setupSection').style.display = 'block';
+                    panel.classList.add('active'); 
+                    document.getElementById('mathSection').style.display = 'none'; 
+                    document.getElementById('setupSection').style.display = 'block';
                     document.getElementById('actionTitle').innerText = 'Phase 2: Context Log';
-                    document.getElementById('countdownTimer').innerText = `0${9-m}:${(59-s).toString().padStart(2, '0')}`; document.getElementById('countdownTimer').style.color = "var(--accent-primary)";
-                } else if (session.attendance === null && !session.missed) { session.attendance = false; session.missed = true; saveCloudData(); panel.classList.remove('active');
-                } else { panel.classList.remove('active'); }
+                    document.getElementById('countdownTimer').innerText = `0${9-m}:${(59-s).toString().padStart(2, '0')}`; 
+                    document.getElementById('countdownTimer').style.color = "var(--accent-primary)";
+                } else if (session.attendance === null && !session.missed) { 
+                    session.attendance = false; 
+                    session.missed = true; 
+                    saveCloudData(); 
+                    panel.classList.remove('active');
+                } else { 
+                    panel.classList.remove('active'); 
+                }
             } else {
                 panel.classList.remove('active');
-                if (session.attendance === true && session.setup === null && !session.missed) { session.setup = "[SYSTEM] Auto-closed."; saveCloudData(); }
-                if (session.attendance === null && !session.missed) { session.attendance = false; session.missed = true; saveCloudData(); }
+                if (session.attendance === true && session.setup === null && !session.missed) { 
+                    session.setup = "[SYSTEM] Auto-closed."; 
+                    saveCloudData(); 
+                }
+                if (session.attendance === null && !session.missed) { 
+                    session.attendance = false; 
+                    session.missed = true; 
+                    saveCloudData(); 
+                }
             }
         }
 
         function generateMath() {
-            const n1 = Math.floor(Math.random() * 50) + 10; const n2 = Math.floor(Math.random() * 50) + 10;
-            const op = ['+', '-'][Math.floor(Math.random() * 2)]; currentMathAns = op === '+' ? n1 + n2 : n1 - n2;
-            document.getElementById('mathProblem').innerText = `${n1} ${op} ${n2}`; document.getElementById('mathAnswer').value = '';
+            const n1 = Math.floor(Math.random() * 50) + 10; 
+            const n2 = Math.floor(Math.random() * 50) + 10;
+            const op = ['+', '-'][Math.floor(Math.random() * 2)]; 
+            currentMathAns = op === '+' ? n1 + n2 : n1 - n2;
+            document.getElementById('mathProblem').innerText = `${n1} ${op} ${n2}`; 
+            document.getElementById('mathAnswer').value = '';
         }
 
         function submitAttendance() {
             if (parseInt(document.getElementById('mathAnswer').value) === currentMathAns) {
-                const now = new Date(); appData[getTodayStr()][now.getHours()].attendance = true; appData[getTodayStr()][now.getHours()].execAttTime = (now.getMinutes() * 60) + now.getSeconds(); 
-                saveCloudData(); document.getElementById('actionPanel').classList.remove('active');
-            } else { alert("Verification failed. Try again."); }
+                const now = new Date(); 
+                appData[getTodayStr()][now.getHours()].attendance = true; 
+                appData[getTodayStr()][now.getHours()].execAttTime = (now.getMinutes() * 60) + now.getSeconds(); 
+                saveCloudData(); 
+                document.getElementById('actionPanel').classList.remove('active');
+            } else { 
+                alert("Verification failed. Try again."); 
+            }
         }
 
         function submitSetup() {
-            const now = new Date(); const h = now.getHours();
-            appData[getTodayStr()][h].setup = document.getElementById('setupNote').value.trim(); appData[getTodayStr()][h].pair = document.getElementById('setupPair').value; 
-            appData[getTodayStr()][h].reason = document.getElementById('setupReason').value; appData[getTodayStr()][h].execSetupTime = ((now.getMinutes()-5) * 60) + now.getSeconds(); 
-            saveCloudData(); document.getElementById('actionPanel').classList.remove('active'); document.getElementById('setupNote').value = '';
+            const now = new Date(); 
+            const h = now.getHours();
+            appData[getTodayStr()][h].setup = document.getElementById('setupNote').value.trim(); 
+            appData[getTodayStr()][h].pair = document.getElementById('setupPair').value; 
+            appData[getTodayStr()][h].reason = document.getElementById('setupReason').value; 
+            appData[getTodayStr()][h].execSetupTime = ((now.getMinutes()-5) * 60) + now.getSeconds(); 
+            saveCloudData(); 
+            document.getElementById('actionPanel').classList.remove('active'); 
+            document.getElementById('setupNote').value = '';
         }
 
         checkSession();
