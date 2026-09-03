@@ -179,7 +179,6 @@
                 <div class="nav-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-border-all"></i> Dashboard</div>
                 <div class="nav-item" onclick="switchTab('history', this)"><i class="fa-solid fa-clock-rotate-left"></i> Daily History</div>
                 <div class="nav-item" onclick="switchTab('analytics', this); loadAdvancedAnalytics();"><i class="fa-solid fa-chart-pie"></i> Analytics & Trends</div>
-                <!-- 🟢 NEW: Notes Tab -->
                 <div class="nav-item" onclick="switchTab('notes', this)"><i class="fa-solid fa-clipboard"></i> Notes Sync Test</div>
             </div>
             
@@ -358,19 +357,19 @@
                     </div>
                 </div>
 
-                <!-- 🟢 NEW: NOTES TAB -->
+                <!-- NOTES TAB -->
                 <div id="notes" class="tab-content">
                     <div class="card">
                         <div class="card-header">
                             <span>Live Sync Notes</span>
-                            <span style="font-size: 12px; color: var(--text-muted);"><i class="fa-solid fa-cloud-arrow-up"></i> Auto syncs globally</span>
+                            <span style="font-size: 12px; color: var(--success-text);"><i class="fa-solid fa-cloud-arrow-up"></i> Real-time Cloud Merged</span>
                         </div>
                         <div style="padding: 24px;">
-                            <textarea id="syncNoteArea" class="input-control" style="width: 100%; height: 300px; resize: vertical; margin-bottom: 16px; font-family: 'Inter', sans-serif;" placeholder="Write something here on one device, click Save, wait a few seconds, and check the other device..."></textarea>
+                            <textarea id="syncNoteArea" class="input-control" style="width: 100%; height: 300px; resize: vertical; margin-bottom: 16px; font-family: 'Inter', sans-serif;" placeholder="Write on Laptop, click Save. Open Tab, it's there. No overwrites."></textarea>
                             
                             <div style="display: flex; align-items: center; gap: 15px;">
                                 <button class="btn btn-primary" style="width: 200px; margin: 0;" onclick="saveSyncNote()">Save Note</button>
-                                <span id="noteStatus" style="color: var(--success-text); display: none; font-size: 13px; font-weight: 500;"><i class="fa-solid fa-check"></i> Saved successfully to Cloud!</span>
+                                <span id="noteStatus" style="font-size: 13px; font-weight: 500; display: none;"></span>
                             </div>
                         </div>
                     </div>
@@ -387,6 +386,7 @@
 
         let currentUser = null;
         let appData = {};
+        const LOCAL_STORAGE_KEY = 'rashik_trading_app_data';
         
         const START_HOUR = 8; 
         const END_HOUR = 23; 
@@ -395,14 +395,11 @@
         let audioEnabled = false;
         let trendChartInst = null; 
         let reasonChartInst = null;
-        
         let isCheckingState = false; 
 
-        // Toggle Login & Signup view
         function toggleAuth(view) {
             document.getElementById('loginCard').classList.remove('active');
             document.getElementById('signupCard').classList.remove('active');
-            
             if(view === 'login') {
                 document.getElementById('loginCard').classList.add('active');
             } else {
@@ -421,6 +418,7 @@
             } else if (event === 'SIGNED_OUT') {
                 currentUser = null;
                 appData = {};
+                localStorage.removeItem(LOCAL_STORAGE_KEY);
                 document.getElementById('authScreen').style.display = 'flex';
                 document.getElementById('appContainer').style.display = 'none';
             }
@@ -436,7 +434,7 @@
             } else {
                 document.getElementById('authScreen').style.display = 'flex';
                 document.getElementById('appContainer').style.display = 'none';
-                toggleAuth('login'); // Default to login view
+                toggleAuth('login');
             }
         }
 
@@ -492,40 +490,68 @@
             await supabaseClient.auth.signOut();
             currentUser = null; 
             appData = {};
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
             document.getElementById('authScreen').style.display = 'flex';
             document.getElementById('appContainer').style.display = 'none';
         }
 
+        // 🟢 FIX 1: Cloud-First Loading Data (Prevents Local Overwrite)
         async function loadCloudData() {
             if (!currentUser) return;
+            
             const { data, error } = await supabaseClient
                 .from('journal_data')
                 .select('app_data')
                 .eq('user_id', currentUser.id)
                 .single();
                 
-            if (data && data.app_data) { 
-                appData = data.app_data; 
+            if (!error && data && data.app_data) { 
+                // Cloud is ALWAYS the boss. 
+                appData = data.app_data;
+                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
                 
-                // 🟢 NEW: Update the Notes Textarea if user is not currently typing in it
                 if (appData.sharedNotes !== undefined) {
                     const noteArea = document.getElementById('syncNoteArea');
                     if (document.activeElement !== noteArea) {
                         noteArea.value = appData.sharedNotes;
                     }
                 }
-
-            } else { 
-                appData = {}; 
+            } else {
+                // Fallback ONLY if cloud fetch fails
+                const localFallback = localStorage.getItem(LOCAL_STORAGE_KEY);
+                if(localFallback) {
+                    try { appData = JSON.parse(localFallback); } 
+                    catch(e) { appData = {}; }
+                }
             }
         }
 
+        // 🟢 FIX 2: Safe Push to Cloud
         async function saveCloudData(render = true) {
             if (!currentUser) return;
-            await supabaseClient.from('journal_data').upsert({ 
+            
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
+
+            const { error } = await supabaseClient.from('journal_data').upsert({ 
                 user_id: currentUser.id, 
                 app_data: appData 
-            });
+            }, { onConflict: 'user_id' });
+            
+            const statusEl = document.getElementById('noteStatus');
+            
+            if (error) {
+                console.error("Cloud Save Failed:", error.message);
+                if(statusEl) {
+                    statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Cloud Sync Failed! (Saved Locally)`;
+                    statusEl.style.color = "var(--warning-text)";
+                    statusEl.style.display = 'inline-block';
+                }
+            } else {
+                if(statusEl) {
+                    statusEl.innerHTML = `<i class="fa-solid fa-check"></i> Safely Synced to Cloud & Local`;
+                    statusEl.style.color = "var(--success-text)";
+                }
+            }
             
             if(render) {
                 if(document.getElementById('dashboard').classList.contains('active')) { 
@@ -539,20 +565,61 @@
             }
         }
 
-        // 🟢 NEW: Function to manually save the note
-        function saveSyncNote() {
+        // 🟢 FIX 3: Fetch BEFORE Save (Fetch-Modify-Push) for actions
+        async function saveSyncNote() {
             const noteContent = document.getElementById('syncNoteArea').value;
+            
+            // 1. Get latest from cloud so we don't overwrite another device's data
+            await loadCloudData(); 
+            
+            // 2. Add our note change
             appData.sharedNotes = noteContent;
             
-            // Save to cloud without re-rendering the whole dashboard
-            saveCloudData(false);
+            // 3. Push it back safely
+            await saveCloudData(false);
             
-            // Show a success message
             const statusEl = document.getElementById('noteStatus');
             statusEl.style.display = 'inline-block';
-            setTimeout(() => {
-                statusEl.style.display = 'none';
-            }, 3000);
+            setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+        }
+
+        async function submitAttendance() {
+            if (parseInt(document.getElementById('mathAnswer').value) === currentMathAns) {
+                const now = new Date(); 
+                const h = now.getHours();
+                const today = getTodayStr();
+                
+                // Fetch latest cloud state before saving
+                await loadCloudData();
+                if (!appData[today]) initTodayData(); 
+                
+                appData[today][h].attendance = true; 
+                appData[today][h].execAttTime = (now.getMinutes() * 60) + now.getSeconds(); 
+                
+                await saveCloudData(); 
+                document.getElementById('actionPanel').classList.remove('active');
+            } else { 
+                alert("Verification failed. Try again."); 
+            }
+        }
+
+        async function submitSetup() {
+            const now = new Date(); 
+            const h = now.getHours();
+            const today = getTodayStr();
+            
+            // Fetch latest cloud state before saving
+            await loadCloudData();
+            if (!appData[today]) initTodayData(); 
+            
+            appData[today][h].setup = document.getElementById('setupNote').value.trim(); 
+            appData[today][h].pair = document.getElementById('setupPair').value; 
+            appData[today][h].reason = document.getElementById('setupReason').value; 
+            appData[today][h].execSetupTime = ((now.getMinutes()-5) * 60) + now.getSeconds(); 
+            
+            await saveCloudData(); 
+            document.getElementById('actionPanel').classList.remove('active'); 
+            document.getElementById('setupNote').value = '';
         }
 
         function initApp() {
@@ -563,7 +630,6 @@
             setInterval(tick, 1000); 
             tick();
             
-            // Background Sync (Every 10 seconds)
             setInterval(async () => {
                 if (currentUser) {
                     await loadCloudData();
@@ -613,7 +679,6 @@
                         execSetupTime: null 
                     }; 
                 }
-                saveCloudData(false);
             }
         }
 
@@ -1005,30 +1070,6 @@
             currentMathAns = op === '+' ? n1 + n2 : n1 - n2;
             document.getElementById('mathProblem').innerText = `${n1} ${op} ${n2}`; 
             document.getElementById('mathAnswer').value = '';
-        }
-
-        function submitAttendance() {
-            if (parseInt(document.getElementById('mathAnswer').value) === currentMathAns) {
-                const now = new Date(); 
-                appData[getTodayStr()][now.getHours()].attendance = true; 
-                appData[getTodayStr()][now.getHours()].execAttTime = (now.getMinutes() * 60) + now.getSeconds(); 
-                saveCloudData(); 
-                document.getElementById('actionPanel').classList.remove('active');
-            } else { 
-                alert("Verification failed. Try again."); 
-            }
-        }
-
-        function submitSetup() {
-            const now = new Date(); 
-            const h = now.getHours();
-            appData[getTodayStr()][h].setup = document.getElementById('setupNote').value.trim(); 
-            appData[getTodayStr()][h].pair = document.getElementById('setupPair').value; 
-            appData[getTodayStr()][h].reason = document.getElementById('setupReason').value; 
-            appData[getTodayStr()][h].execSetupTime = ((now.getMinutes()-5) * 60) + now.getSeconds(); 
-            saveCloudData(); 
-            document.getElementById('actionPanel').classList.remove('active'); 
-            document.getElementById('setupNote').value = '';
         }
 
         checkSession();
