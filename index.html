@@ -365,7 +365,7 @@
                             <span style="font-size: 12px; color: var(--success-text);"><i class="fa-solid fa-cloud-arrow-up"></i> Real-time Cloud Merged</span>
                         </div>
                         <div style="padding: 24px;">
-                            <textarea id="syncNoteArea" class="input-control" style="width: 100%; height: 300px; resize: vertical; margin-bottom: 16px; font-family: 'Inter', sans-serif;" placeholder="Write on Laptop, click Save. Open Tab, it's there. No overwrites."></textarea>
+                            <textarea id="syncNoteArea" class="input-control" style="width: 100%; height: 300px; resize: vertical; margin-bottom: 16px; font-family: 'Inter', sans-serif;" placeholder="Start typing... It will be saved locally instantly, even if you refresh!"></textarea>
                             
                             <div style="display: flex; align-items: center; gap: 15px;">
                                 <button class="btn btn-primary" style="width: 200px; margin: 0;" onclick="saveSyncNote()">Save Note</button>
@@ -396,6 +396,12 @@
         let trendChartInst = null; 
         let reasonChartInst = null;
         let isCheckingState = false; 
+
+        // 🟢 FIX 1: Auto-save to Local Storage on every keystroke!
+        document.getElementById('syncNoteArea').addEventListener('input', function(e) {
+            appData.sharedNotes = e.target.value;
+            localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
+        });
 
         function toggleAuth(view) {
             document.getElementById('loginCard').classList.remove('active');
@@ -495,61 +501,91 @@
             document.getElementById('appContainer').style.display = 'none';
         }
 
-        // 🟢 FIX 1: Cloud-First Loading Data (Prevents Local Overwrite)
+        // 🟢 FIX 2: Bulletproof Loading System
         async function loadCloudData() {
             if (!currentUser) return;
             
-            const { data, error } = await supabaseClient
-                .from('journal_data')
-                .select('app_data')
-                .eq('user_id', currentUser.id)
-                .single();
-                
-            if (!error && data && data.app_data) { 
-                // Cloud is ALWAYS the boss. 
-                appData = data.app_data;
-                localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
-                
-                if (appData.sharedNotes !== undefined) {
-                    const noteArea = document.getElementById('syncNoteArea');
-                    if (document.activeElement !== noteArea) {
-                        noteArea.value = appData.sharedNotes;
-                    }
+            try {
+                const { data, error } = await supabaseClient
+                    .from('journal_data')
+                    .select('app_data')
+                    .eq('user_id', currentUser.id)
+                    .maybeSingle(); // Prevents multiple row error
+                    
+                if (!error && data && data.app_data) { 
+                    appData = data.app_data;
+                    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
+                } else {
+                    loadLocalFallback();
                 }
-            } else {
-                // Fallback ONLY if cloud fetch fails
-                const localFallback = localStorage.getItem(LOCAL_STORAGE_KEY);
-                if(localFallback) {
-                    try { appData = JSON.parse(localFallback); } 
-                    catch(e) { appData = {}; }
+            } catch(e) {
+                loadLocalFallback();
+            }
+
+            // Restore Note to Textarea
+            if (appData.sharedNotes !== undefined) {
+                const noteArea = document.getElementById('syncNoteArea');
+                if (document.activeElement !== noteArea) {
+                    noteArea.value = appData.sharedNotes;
                 }
             }
         }
 
-        // 🟢 FIX 2: Safe Push to Cloud
+        function loadLocalFallback() {
+            const localFallback = localStorage.getItem(LOCAL_STORAGE_KEY);
+            if(localFallback) {
+                try { appData = JSON.parse(localFallback); } 
+                catch(e) { appData = {}; }
+            }
+        }
+
+        // 🟢 FIX 3: Safe Save - Bypassing Upsert Errors & Showing Exact Error
         async function saveCloudData(render = true) {
             if (!currentUser) return;
             
+            // Instantly save locally
             localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(appData));
 
-            const { error } = await supabaseClient.from('journal_data').upsert({ 
-                user_id: currentUser.id, 
-                app_data: appData 
-            }, { onConflict: 'user_id' });
+            let cloudErrorMsg = null;
+            
+            try {
+                // Check if user row exists
+                const { data: existingRow } = await supabaseClient
+                    .from('journal_data')
+                    .select('user_id')
+                    .eq('user_id', currentUser.id)
+                    .maybeSingle();
+
+                let res;
+                if (existingRow) {
+                    // Update existing
+                    res = await supabaseClient.from('journal_data')
+                        .update({ app_data: appData })
+                        .eq('user_id', currentUser.id);
+                } else {
+                    // Insert new
+                    res = await supabaseClient.from('journal_data')
+                        .insert([{ user_id: currentUser.id, app_data: appData }]);
+                }
+
+                if (res.error) cloudErrorMsg = res.error.message;
+            } catch (err) {
+                cloudErrorMsg = err.message;
+            }
             
             const statusEl = document.getElementById('noteStatus');
-            
-            if (error) {
-                console.error("Cloud Save Failed:", error.message);
+            if (cloudErrorMsg) {
+                console.error("Cloud Save Failed:", cloudErrorMsg);
                 if(statusEl) {
-                    statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Cloud Sync Failed! (Saved Locally)`;
-                    statusEl.style.color = "var(--warning-text)";
+                    statusEl.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Error: ${cloudErrorMsg} (Saved Locally)`;
+                    statusEl.style.color = "var(--danger-text)";
                     statusEl.style.display = 'inline-block';
                 }
             } else {
                 if(statusEl) {
                     statusEl.innerHTML = `<i class="fa-solid fa-check"></i> Safely Synced to Cloud & Local`;
                     statusEl.style.color = "var(--success-text)";
+                    statusEl.style.display = 'inline-block';
                 }
             }
             
@@ -565,22 +601,13 @@
             }
         }
 
-        // 🟢 FIX 3: Fetch BEFORE Save (Fetch-Modify-Push) for actions
         async function saveSyncNote() {
             const noteContent = document.getElementById('syncNoteArea').value;
-            
-            // 1. Get latest from cloud so we don't overwrite another device's data
-            await loadCloudData(); 
-            
-            // 2. Add our note change
             appData.sharedNotes = noteContent;
-            
-            // 3. Push it back safely
             await saveCloudData(false);
             
             const statusEl = document.getElementById('noteStatus');
-            statusEl.style.display = 'inline-block';
-            setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+            setTimeout(() => { if(statusEl) statusEl.style.display = 'none'; }, 6000);
         }
 
         async function submitAttendance() {
@@ -589,7 +616,6 @@
                 const h = now.getHours();
                 const today = getTodayStr();
                 
-                // Fetch latest cloud state before saving
                 await loadCloudData();
                 if (!appData[today]) initTodayData(); 
                 
@@ -608,7 +634,6 @@
             const h = now.getHours();
             const today = getTodayStr();
             
-            // Fetch latest cloud state before saving
             await loadCloudData();
             if (!appData[today]) initTodayData(); 
             
