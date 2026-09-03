@@ -429,7 +429,7 @@
                         </div>
                     </div>
 
-                    <!-- 🟢 UPDATED: MODERN DAILY JOURNAL & NOTES TAB -->
+                    <!-- MODERN DAILY JOURNAL & NOTES TAB -->
                     <div id="notes" class="tab-content">
                         <div class="notes-layout">
                             <div class="notes-sidebar">
@@ -494,7 +494,6 @@
         let currentMathAns = null; 
         let lastGeneratedHour = -1;
         
-        // 🟢 FIX: Load audio state from localStorage to persist across reloads
         let audioEnabled = localStorage.getItem('rashik_audio_alert') === 'true';
         let trendChartInst = null; 
         let reasonChartInst = null;
@@ -826,7 +825,6 @@
 
         function toggleAudio() {
             audioEnabled = !audioEnabled;
-            // 🟢 FIX: Save state so it survives refreshes
             localStorage.setItem('rashik_audio_alert', audioEnabled);
             initAudioUI();
             if(audioEnabled) {
@@ -1072,20 +1070,19 @@
             
             document.getElementById('clockText').innerText = `${displayH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} ${ampm}`;
             
-            // Phase 1 Alert (Minute 0)
             if (h >= START_HOUR && h <= END_HOUR && m === 0 && audioEnabled && lastPlayedHour !== h) { 
                 document.getElementById('candleAlert').play().catch(e=>{}); 
                 lastPlayedHour = h; 
             }
 
-            // 🟢 FIX: Phase 2 Alert (Minute 5 for Execution Log)
             if (h >= START_HOUR && h <= END_HOUR && m === 5 && audioEnabled && lastPlayedPhase2Hour !== h) { 
                 document.getElementById('candleAlert').play().catch(e=>{}); 
                 lastPlayedPhase2Hour = h; 
             }
             
-            // 🟢 FIX: English Text Only & "Rashik"
-            document.getElementById('greetingText').innerText = `${h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : "Good Evening"}, Rashik`;
+            // 🟢 FIXED: Good Night starts at 8 PM (20:00)
+            document.getElementById('greetingText').innerText = `${h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : h < 20 ? "Good Evening" : "Good Night"}, Rashik`;
+            
             processRules(h, m, s);
         }
 
