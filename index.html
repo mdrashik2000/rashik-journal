@@ -298,7 +298,6 @@
                                     <div class="stat-header"><span>Focus Score</span></div>
                                     <div class="stat-value" id="statScore">0%</div>
                                 </div>
-                                <!-- 🟢 NEW: Active Discipline Hour Stat -->
                                 <div class="stat-card">
                                     <div class="stat-header"><span>Disciplined Hrs</span></div>
                                     <div class="stat-value" id="statDisciplined" style="color: var(--success-text);">0</div>
@@ -654,7 +653,7 @@
             return !cloudErrorMsg; // true if success
         }
 
-        // --- 🟢 UPDATED: Daily Notes Logic ---
+        // --- Daily Notes Logic ---
         function loadNotesUI() {
             const picker = document.getElementById('noteDatePicker');
             if(!picker.value) picker.value = getTodayStr();
@@ -723,7 +722,6 @@
             refreshNotesListOnly();
             document.getElementById('noteTitleInput').focus();
 
-            // 🟢 NEW FIX: Save immediately to cloud to prevent overwrite bug
             await saveCloudData(false);
         }
 
@@ -765,10 +763,8 @@
             statusEl.style.color = 'var(--text-muted)';
             statusEl.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Syncing...`;
             
-            // 1. Save local changes first
             autoSaveNoteLocally();
             
-            // 2. Push directly to cloud without downloading old data (FIXED BUG)
             const success = await saveCloudData(false);
             
             if(success) {
@@ -955,7 +951,7 @@
             document.getElementById('statMissed').innerText = missed;
             document.getElementById('statSetups').innerText = setups; 
             document.getElementById('statExecTime').innerText = avgTime > 0 ? `${avgTime}s` : '0s';
-            // 🟢 NEW: Update Disciplined Hours Stat
+            
             document.getElementById('statDisciplined').innerText = completed;
         }
 
@@ -1090,10 +1086,13 @@
             
             document.getElementById('clockText').innerText = `${displayH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} ${ampm}`;
             
-            if (h >= START_HOUR && h <= END_HOUR && m === 0 && s === 0 && audioEnabled && lastPlayedHour !== h) { 
-                document.getElementById('candleAlert').play().catch(e=>{}); lastPlayedHour = h; 
+            // 🟢 FIX: 's === 0' কন্ডিশনটা রিমুভ করা হয়েছে যাতে ব্যাকগ্রাউন্ড থ্রটলিং এর কারণে মিস না হয়
+            if (h >= START_HOUR && h <= END_HOUR && m === 0 && audioEnabled && lastPlayedHour !== h) { 
+                document.getElementById('candleAlert').play().catch(e=>{}); 
+                lastPlayedHour = h; 
             }
-            document.getElementById('greetingText').innerText = `${h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : "Good Evening"}, Rashik`;
+            
+            document.getElementById('greetingText').innerText = `${h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : "Good Evening"}, রাশিক ভাই`;
             processRules(h, m, s);
         }
 
