@@ -179,6 +179,8 @@
                 <div class="nav-item active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-border-all"></i> Dashboard</div>
                 <div class="nav-item" onclick="switchTab('history', this)"><i class="fa-solid fa-clock-rotate-left"></i> Daily History</div>
                 <div class="nav-item" onclick="switchTab('analytics', this); loadAdvancedAnalytics();"><i class="fa-solid fa-chart-pie"></i> Analytics & Trends</div>
+                <!-- 🟢 NEW: Notes Tab -->
+                <div class="nav-item" onclick="switchTab('notes', this)"><i class="fa-solid fa-clipboard"></i> Notes Sync Test</div>
             </div>
             
             <div class="sys-controls">
@@ -355,6 +357,25 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- 🟢 NEW: NOTES TAB -->
+                <div id="notes" class="tab-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <span>Live Sync Notes</span>
+                            <span style="font-size: 12px; color: var(--text-muted);"><i class="fa-solid fa-cloud-arrow-up"></i> Auto syncs globally</span>
+                        </div>
+                        <div style="padding: 24px;">
+                            <textarea id="syncNoteArea" class="input-control" style="width: 100%; height: 300px; resize: vertical; margin-bottom: 16px; font-family: 'Inter', sans-serif;" placeholder="Write something here on one device, click Save, wait a few seconds, and check the other device..."></textarea>
+                            
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <button class="btn btn-primary" style="width: 200px; margin: 0;" onclick="saveSyncNote()">Save Note</button>
+                                <span id="noteStatus" style="color: var(--success-text); display: none; font-size: 13px; font-weight: 500;"><i class="fa-solid fa-check"></i> Saved successfully to Cloud!</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -375,7 +396,6 @@
         let trendChartInst = null; 
         let reasonChartInst = null;
         
-        // 🟢 FIX 1: গ্লোবাল ভেরিয়েবল যা বারবার চেক করা ঠেকাবে
         let isCheckingState = false; 
 
         // Toggle Login & Signup view
@@ -486,6 +506,15 @@
                 
             if (data && data.app_data) { 
                 appData = data.app_data; 
+                
+                // 🟢 NEW: Update the Notes Textarea if user is not currently typing in it
+                if (appData.sharedNotes !== undefined) {
+                    const noteArea = document.getElementById('syncNoteArea');
+                    if (document.activeElement !== noteArea) {
+                        noteArea.value = appData.sharedNotes;
+                    }
+                }
+
             } else { 
                 appData = {}; 
             }
@@ -510,6 +539,22 @@
             }
         }
 
+        // 🟢 NEW: Function to manually save the note
+        function saveSyncNote() {
+            const noteContent = document.getElementById('syncNoteArea').value;
+            appData.sharedNotes = noteContent;
+            
+            // Save to cloud without re-rendering the whole dashboard
+            saveCloudData(false);
+            
+            // Show a success message
+            const statusEl = document.getElementById('noteStatus');
+            statusEl.style.display = 'inline-block';
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 3000);
+        }
+
         function initApp() {
             initTodayData(); 
             renderMatrix(); 
@@ -518,7 +563,7 @@
             setInterval(tick, 1000); 
             tick();
             
-            // 🟢 FIX 2: Auto Sync (ল্যাপটপ ও ট্যাবকে সব সময় আপডেটেড রাখবে)
+            // Background Sync (Every 10 seconds)
             setInterval(async () => {
                 if (currentUser) {
                     await loadCloudData();
@@ -528,7 +573,7 @@
                         analyzeWeakness();
                     }
                 }
-            }, 10000); // প্রতি ১০ সেকেন্ডে সিঙ্ক হবে
+            }, 10000);
         }
 
         function toggleAudio() {
@@ -909,7 +954,6 @@
                 } else if (session.attendance === null && !session.missed) { 
                     panel.classList.remove('active');
                     
-                    // 🟢 FIX 3: ফেইল করার আগে ক্লাউড থেকে ফ্রেশ ডেটা চেক করবে
                     if(!isCheckingState) {
                         isCheckingState = true;
                         loadCloudData().then(() => {
@@ -931,7 +975,6 @@
                 let needsAutoFail = (session.attendance === null && !session.missed);
 
                 if (needsAutoClose || needsAutoFail) {
-                    // 🟢 FIX 4: ফেইল বা অটো-ক্লোজ করার আগেও সেম ক্লাউড চেক করবে
                     if(!isCheckingState) {
                         isCheckingState = true;
                         loadCloudData().then(() => {
