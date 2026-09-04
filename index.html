@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rashik's Evaluation Terminal</title>
+    <title>Prop Firm Millionaire Journey</title>
     
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%233b82f6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='22 12 18 12 15 21 9 3 6 12 2 12'></polyline></svg>">
     
@@ -92,13 +92,13 @@
         [data-theme="light"] .top-header { background: rgba(255, 255, 255, 0.8); }
         [data-theme="dim"] .top-header { background: rgba(30, 41, 59, 0.8); }
         
-        .greeting h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px;}
+        .greeting h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px;}
         .greeting p { color: var(--text-muted); font-size: 13px; display: flex; align-items: center; gap: 8px; font-weight: 500;}
         
         .header-actions { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
         .audio-btn { background: var(--warning-bg); color: var(--warning-text); border: 1px solid rgba(245, 158, 11, 0.3); padding: 10px 20px; border-radius: 30px; font-size: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s;}
         .audio-btn.active { background: var(--success-bg); color: var(--success-text); border-color: rgba(16, 185, 129, 0.3); }
-        .clock-display { font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 700; color: var(--text-main); background: var(--bg-base); padding: 10px 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+        .clock-display { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; color: var(--text-main); background: var(--bg-base); padding: 10px 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color); box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
 
         .content { padding: 48px; max-width: 1600px; margin: 0 auto; width: 100%; }
         .tab-content { display: none; }
@@ -206,7 +206,7 @@
     <!-- AUTH SCREEN -->
     <div id="authScreen">
         <div class="auth-card active" id="loginCard">
-            <h2><i class="fa-solid fa-chart-line" style="color: var(--accent-primary);"></i> Rashik's Terminal</h2>
+            <h2><i class="fa-solid fa-chart-line" style="color: var(--accent-primary);"></i> Prop Firm Millionaire</h2>
             <p style="color: var(--text-muted); margin-bottom: 24px; font-size: 14px;">Secure Cloud Evaluation Login</p>
             
             <input type="email" id="loginEmail" class="auth-input" placeholder="Email Address">
@@ -236,7 +236,7 @@
         <div class="main-wrapper">
             <div class="sidebar">
                 <div class="brand">
-                    <i class="fa-solid fa-chart-line logo-icon"></i> Rashik's Evaluation
+                    <i class="fa-solid fa-chart-line logo-icon"></i> Prop Firm Millionaire Journey
                 </div>
                 
                 <div class="nav-menu">
@@ -259,14 +259,19 @@
             <div class="workspace">
                 <div class="top-header">
                     <div class="greeting">
-                        <h1 id="greetingText">Loading...</h1>
+                        <h1 style="display:flex; align-items:center; gap:10px;">
+                            <span id="greetingText">Loading...</span>
+                            <button onclick="openProfile()" style="background:none; border:none; color:var(--accent-primary); cursor:pointer; font-size:16px;" title="Edit Profile">
+                                <i class="fa-solid fa-user-pen"></i>
+                            </button>
+                        </h1>
                         <p><i class="fa-solid fa-shield-halved" style="color: var(--success-text);"></i> Terminal Active • MNQ/MGC Core</p>
                     </div>
                     <div class="header-actions">
                         <button id="audioToggleBtn" class="audio-btn" onclick="toggleAudio()">
                             <i class="fa-solid fa-bell-slash"></i> Alerts Muted
                         </button>
-                        <div class="clock-display" id="clockText">--:--:-- --</div>
+                        <div class="clock-display" id="clockText">-- --:--:-- --</div>
                     </div>
                 </div>
 
@@ -489,6 +494,8 @@
         let appData = {};
         const LOCAL_STORAGE_KEY = 'rashik_trading_app_data';
         
+        let displayName = localStorage.getItem('rashik_display_name') || 'Rashik';
+        
         const START_HOUR = 8; 
         const END_HOUR = 23; 
         let currentMathAns = null; 
@@ -501,6 +508,29 @@
 
         let currentNoteDateStr = '';
         let activeNoteId = null;
+        
+        // US Market Holidays (Static examples - can be updated yearly)
+        const marketHolidays = [
+            "2026-01-01", "2026-01-19", "2026-02-16", "2026-04-03", 
+            "2026-05-25", "2026-06-19", "2026-07-03", "2026-09-07", 
+            "2026-11-26", "2026-12-25"
+        ];
+
+        function isMarketClosed(dateStr) {
+            const d = new Date(dateStr);
+            const isWeekend = d.getDay() === 0 || d.getDay() === 6;
+            const isHoliday = marketHolidays.includes(dateStr);
+            return isWeekend || isHoliday;
+        }
+
+        function openProfile() {
+            let newName = prompt("Enter your Display Name:", displayName);
+            if (newName && newName.trim() !== '') {
+                displayName = newName.trim();
+                localStorage.setItem('rashik_display_name', displayName);
+                tick(); 
+            }
+        }
 
         function toggleAuth(view) {
             document.getElementById('loginCard').classList.remove('active');
@@ -902,9 +932,18 @@
 
         function renderMatrix() {
             ensureDataStructure(); 
-            const today = getTodayStr(); const data = appData[today]; const tbody = document.getElementById('matrixBody'); 
-            const currentHour = new Date().getHours();
+            const today = getTodayStr(); 
+            const tbody = document.getElementById('matrixBody'); 
+            
             document.getElementById('currentDateDisplay').innerText = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' });
+            
+            if (isMarketClosed(today)) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--warning-text); font-weight: 600; padding: 40px; font-size: 16px;">Market Closed - Weekend or Holiday.<br><span style="font-size: 13px; color: var(--text-muted); font-weight: 400;">Rest, Backtest, and prepare for the next session.</span></td></tr>`;
+                return;
+            }
+
+            const data = appData[today];
+            const currentHour = new Date().getHours();
             tbody.innerHTML = '';
             for (let h = START_HOUR; h <= END_HOUR; h++) {
                 const tr = document.createElement('tr'); 
@@ -915,7 +954,18 @@
         }
 
         function updateStats() {
-            const today = getTodayStr(); const data = appData[today]; 
+            const today = getTodayStr(); 
+            
+            if (isMarketClosed(today)) {
+                document.getElementById('statScore').innerText = `-`; 
+                document.getElementById('statMissed').innerText = `-`;
+                document.getElementById('statSetups').innerText = `-`; 
+                document.getElementById('statExecTime').innerText = `-`;
+                document.getElementById('statDisciplined').innerText = `-`;
+                return;
+            }
+
+            const data = appData[today]; 
             let completed = 0, setups = 0, missed = 0, totalAttTime = 0, validAttCount = 0;
             const total = (END_HOUR - START_HOUR) + 1; const currentHour = new Date().getHours();
 
@@ -938,7 +988,15 @@
         }
 
         function analyzeWeakness() {
-            const today = getTodayStr(); const data = appData[today]; 
+            const today = getTodayStr(); 
+            
+            if (isMarketClosed(today)) {
+                document.getElementById('realityText').innerText = "Market is closed today. Take this time to review previous trades and relax your psychology."; 
+                document.getElementById('weaknessBadgeContainer').innerHTML = `<span class="weakness-tag" style="background:var(--warning-bg); color:var(--warning-text); border-color:var(--warning-text)">Weekend / Holiday</span>`;
+                return;
+            }
+
+            const data = appData[today]; 
             let lazyCount = 0, missedCount = 0, totalAttTime = 0, attCount = 0, confCount = 0;
             const currentHour = new Date().getHours();
 
@@ -970,10 +1028,18 @@
         }
 
         function loadHistory() {
-            const dateStr = document.getElementById('historyDate').value; const data = appData[dateStr]; 
+            const dateStr = document.getElementById('historyDate').value;  
             const tbody = document.getElementById('historyBody'); const todayStr = getTodayStr(); const currentHour = new Date().getHours();
             
-            document.getElementById('historyTitle').innerText = `Archived Matrix: ${dateStr}`; tbody.innerHTML = '';
+            document.getElementById('historyTitle').innerText = `Archived Matrix: ${dateStr}`; 
+            tbody.innerHTML = '';
+
+            if (isMarketClosed(dateStr)) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--warning-text); font-weight: 600; padding: 40px; font-size: 16px;">Market Closed - Weekend or Holiday</td></tr>`;
+                return;
+            }
+
+            const data = appData[dateStr];
             const isFutureDate = dateStr > todayStr; const isPastDate = dateStr < todayStr; const isToday = dateStr === todayStr;
             
             if(!data && !isFutureDate) { 
@@ -992,6 +1058,7 @@
         function getPeriodScore(datesArray) {
             let completed = 0, totalEligible = 0;
             datesArray.forEach(d => {
+                if (isMarketClosed(d)) return; // Skip weekends & holidays in analytics
                 if(appData[d] && appData[d][START_HOUR]) { 
                     for(let h=START_HOUR; h<=END_HOUR; h++) { 
                         totalEligible++; if(appData[d][h].attendance && appData[d][h].setup) completed++; 
@@ -1016,6 +1083,7 @@
 
             let reasonCount = {}; let totalSetups = 0;
             allDates.forEach(d => {
+                if (isMarketClosed(d)) return;
                 for(let h=START_HOUR; h<=END_HOUR; h++) {
                     if(appData[d] && appData[d][h] && appData[d][h].attendance) {
                         let r = appData[d][h].reason; 
@@ -1068,7 +1136,10 @@
             const now = new Date(); const h = now.getHours(); const m = now.getMinutes(); const s = now.getSeconds();
             const ampm = h >= 12 ? 'PM' : 'AM'; let displayH = h % 12; displayH = displayH ? displayH : 12;
             
-            document.getElementById('clockText').innerText = `${displayH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} ${ampm}`;
+            const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            const dayName = days[now.getDay()];
+            
+            document.getElementById('clockText').innerText = `${dayName} | ${displayH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')} ${ampm}`;
             
             if (h >= START_HOUR && h <= END_HOUR && m === 0 && audioEnabled && lastPlayedHour !== h) { 
                 document.getElementById('candleAlert').play().catch(e=>{}); 
@@ -1080,8 +1151,8 @@
                 lastPlayedPhase2Hour = h; 
             }
             
-            // 🟢 FIXED: Good Night starts at 8 PM (20:00)
-            document.getElementById('greetingText').innerText = `${h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : h < 20 ? "Good Evening" : "Good Night"}, Rashik`;
+            let greetingWord = h < 12 ? "Good Morning" : h < 17 ? "Good Afternoon" : h < 20 ? "Good Evening" : "Good Night";
+            document.getElementById('greetingText').innerText = `${greetingWord}, ${displayName}`;
             
             processRules(h, m, s);
         }
@@ -1089,9 +1160,13 @@
         function processRules(h, m, s) {
             if(!document.getElementById('dashboard').classList.contains('active')) return;
             const panel = document.getElementById('actionPanel'); const today = getTodayStr();
-            ensureDataStructure(); const session = appData[today][h];
+            
+            if (isMarketClosed(today) || h < START_HOUR || h > END_HOUR) { 
+                panel.classList.remove('active'); 
+                return; 
+            }
 
-            if (h < START_HOUR || h > END_HOUR) { panel.classList.remove('active'); return; }
+            ensureDataStructure(); const session = appData[today][h];
 
             if (m >= 0 && m < 5) {
                 if (session.attendance === null) {
